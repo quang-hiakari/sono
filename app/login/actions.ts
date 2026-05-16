@@ -5,19 +5,28 @@ import { headers } from 'next/headers';
 import { createAuth } from '@/lib/auth';
 import { getDB } from '@/lib/db';
 
-export async function signIn(formData: FormData) {
-  const email = formData.get('email') as string;
-  const password = formData.get('password') as string;
-
+export async function sendOtp(email: string) {
   const auth = createAuth(getDB());
   try {
-    await auth.api.signInEmail({
-      body: { email, password },
+    await auth.api.sendVerificationOTP({
+      body: { email, type: 'sign-in' },
+      headers: await headers(),
+    });
+    return {};
+  } catch {
+    return { error: 'Không thể gửi mã. Kiểm tra lại email.' };
+  }
+}
+
+export async function verifyOtp(email: string, otp: string) {
+  const auth = createAuth(getDB());
+  try {
+    await auth.api.signInEmailOTP({
+      body: { email, otp },
       headers: await headers(),
     });
   } catch {
-    return { error: 'Email hoặc mật khẩu không đúng.' };
+    return { error: 'Mã không đúng hoặc đã hết hạn.' };
   }
-
   redirect('/books');
 }
