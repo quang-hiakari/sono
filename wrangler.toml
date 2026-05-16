@@ -1,0 +1,14 @@
+name = "sono"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+pages_build_output_dir = ".vercel/output/static"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sono-db"
+database_id = "b7f54757-14e1-4b9d-94b5-6d5f8b84a6bd"  # Run: wrangler d1 create sono-db
+
+[[r2_buckets]]
+binding = "RECEIPTS"
+bucket_name = "sono-receipts"  # Run: wrangler r2 bucket create sono-receipts

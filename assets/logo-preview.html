@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SoNo — Logo System</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --navy:   #0F172A;
+      --navy-2: #1E293B;
+      --blue:   #3B82F6;
+      --blue-d: #2563EB;
+      --red:    #F87171;
+      --green:  #4ADE80;
+      --slate:  #94A3B8;
+      --bg:     #F8FAFC;
+    }
+
+    body {
+      font-family: 'IBM Plex Sans', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--navy);
+      min-height: 100vh;
+      padding: 48px 32px;
+    }
+
+    h1 {
+      font-size: 13px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--slate);
+      margin-bottom: 48px;
+    }
+
+    .section {
+      margin-bottom: 64px;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: #CBD5E1;
+      margin-bottom: 24px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #E2E8F0;
+    }
+
+    .row {
+      display: flex;
+      align-items: center;
+      gap: 48px;
+      flex-wrap: wrap;
+    }
+
+    /* ── Card containers ── */
+    .card {
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px;
+    }
+    .card-light { background: #FFFFFF; border: 1px solid #E2E8F0; }
+    .card-dark  { background: var(--navy); }
+    .card-mid   { background: #F1F5F9; border: 1px solid #E2E8F0; }
+
+    /* ── Wordmark ── */
+    .wordmark {
+      display: flex;
+      align-items: baseline;
+      line-height: 1;
+      letter-spacing: -0.03em;
+    }
+    .wordmark .so {
+      font-weight: 300;
+      color: var(--navy);
+    }
+    .wordmark .no {
+      font-weight: 700;
+      color: var(--blue-d);
+    }
+    .wordmark.on-dark .so { color: #E2E8F0; }
+    .wordmark.on-dark .no { color: var(--blue); }
+
+    /* ── Horizontal lockup ── */
+    .lockup {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .lockup-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .lockup-tagline {
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.06em;
+      color: var(--slate);
+    }
+    .lockup-tagline.on-dark {
+      color: #475569;
+    }
+
+    /* ── Color swatches ── */
+    .swatches {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .swatch {
+      width: 64px;
+    }
+    .swatch-block {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+      margin-bottom: 8px;
+      border: 1px solid rgba(0,0,0,0.06);
+    }
+    .swatch-name {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--slate);
+      display: block;
+    }
+    .swatch-hex {
+      font-size: 11px;
+      color: #64748B;
+      display: block;
+    }
+
+    /* ── Size grid ── */
+    .sizes {
+      display: flex;
+      align-items: flex-end;
+      gap: 24px;
+    }
+    .size-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+    .size-label {
+      font-size: 10px;
+      color: var(--slate);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Don'ts ── */
+    .dont-grid {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .dont-card {
+      border: 1px solid #FEE2E2;
+      background: #FFF5F5;
+      border-radius: 12px;
+      padding: 24px;
+      position: relative;
+    }
+    .dont-card::after {
+      content: '✕ Don\'t';
+      position: absolute;
+      top: 8px;
+      right: 10px;
+      font-size: 10px;
+      font-weight: 600;
+      color: #EF4444;
+      letter-spacing: 0.06em;
+    }
+
+    /* ── Animated icon ── */
+    @keyframes pulseSpine {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    .logo-icon-animated #spine {
+      animation: pulseSpine 3s ease-in-out infinite;
+    }
+  </style>
+</head>
+<body>
+
+<h1>SoNo · Logo System · Sổ Nợ</h1>
+
+<!-- ── 1. Primary Icon ── -->
+<div class="section">
+  <div class="section-label">01 — App Icon</div>
+  <div class="row">
+
+    <!-- Large on light -->
+    <div class="card card-light">
+      <svg class="logo-icon-animated" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="120" height="120">
+        <defs>
+          <linearGradient id="bgG" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#0D1B3E"/>
+            <stop offset="100%" stop-color="#0F172A"/>
+          </linearGradient>
+          <linearGradient id="spG" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#2563EB"/>
+            <stop offset="100%" stop-color="#3B82F6"/>
+          </linearGradient>
+          <filter id="glow1">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <clipPath id="cl"><rect x="13" y="19" width="29" height="62" rx="2"/></clipPath>
+          <clipPath id="cr"><rect x="58" y="19" width="29" height="62" rx="2"/></clipPath>
+        </defs>
+        <rect width="100" height="100" rx="22" fill="url(#bgG)"/>
+        <rect x="13" y="19" width="29" height="62" rx="2" fill="#1E293B" stroke="#2D3F5B" stroke-width="0.5"/>
+        <rect x="58" y="19" width="29" height="62" rx="2" fill="#1E293B" stroke="#2D3F5B" stroke-width="0.5"/>
+        <rect id="spine" x="39" y="15" width="22" height="70" rx="4" fill="url(#spG)" filter="url(#glow1)"/>
+        <rect x="40" y="15" width="5" height="70" rx="3" fill="#60A5FA" opacity="0.35"/>
+        <line x1="19" y1="33" x2="37" y2="33" stroke="#F87171" stroke-width="1.8" stroke-linecap="round" clip-path="url(#cl)"/>
+        <line x1="19" y1="43" x2="37" y2="43" stroke="#F87171" stroke-width="1.8" stroke-linecap="round" clip-path="url(#cl)"/>
+        <line x1="19" y1="53" x2="34" y2="53" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#cl)"/>
+        <line x1="19" y1="62" x2="30" y2="62" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#cl)"/>
+        <line x1="19" y1="69" x2="37" y2="69" stroke="#334155" stroke-width="0.6" clip-path="url(#cl)"/>
+        <line x1="63" y1="33" x2="81" y2="33" stroke="#4ADE80" stroke-width="1.8" stroke-linecap="round" clip-path="url(#cr)"/>
+        <line x1="63" y1="43" x2="76" y2="43" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#cr)"/>
+        <polyline points="64,57 70,64 81,51" stroke="#4ADE80" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cr)"/>
+      </svg>
+    </div>
+
+    <!-- Large on dark -->
+    <div class="card card-dark">
+      <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="120" height="120">
+        <defs>
+          <linearGradient id="bgG2" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#0D1B3E"/>
+            <stop offset="100%" stop-color="#0F172A"/>
+          </linearGradient>
+          <linearGradient id="spG2" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#2563EB"/>
+            <stop offset="100%" stop-color="#3B82F6"/>
+          </linearGradient>
+          <filter id="glow2">
+            <feGaussianBlur stdDeviation="2.5" result="blur"/>
+            <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+          </filter>
+          <clipPath id="cl2"><rect x="13" y="19" width="29" height="62" rx="2"/></clipPath>
+          <clipPath id="cr2"><rect x="58" y="19" width="29" height="62" rx="2"/></clipPath>
+        </defs>
+        <rect width="100" height="100" rx="22" fill="url(#bgG2)"/>
+        <rect x="13" y="19" width="29" height="62" rx="2" fill="#1E293B" stroke="#2D3F5B" stroke-width="0.5"/>
+        <rect x="58" y="19" width="29" height="62" rx="2" fill="#1E293B" stroke="#2D3F5B" stroke-width="0.5"/>
+        <rect x="39" y="15" width="22" height="70" rx="4" fill="url(#spG2)" filter="url(#glow2)"/>
+        <rect x="40" y="15" width="5" height="70" rx="3" fill="#60A5FA" opacity="0.35"/>
+        <line x1="19" y1="33" x2="37" y2="33" stroke="#F87171" stroke-width="1.8" stroke-linecap="round" clip-path="url(#cl2)"/>
+        <line x1="19" y1="43" x2="37" y2="43" stroke="#F87171" stroke-width="1.8" stroke-linecap="round" clip-path="url(#cl2)"/>
+        <line x1="19" y1="53" x2="34" y2="53" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#cl2)"/>
+        <line x1="19" y1="62" x2="30" y2="62" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#cl2)"/>
+        <line x1="19" y1="69" x2="37" y2="69" stroke="#334155" stroke-width="0.6" clip-path="url(#cl2)"/>
+        <line x1="63" y1="33" x2="81" y2="33" stroke="#4ADE80" stroke-width="1.8" stroke-linecap="round" clip-path="url(#cr2)"/>
+        <line x1="63" y1="43" x2="76" y2="43" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#cr2)"/>
+        <polyline points="64,57 70,64 81,51" stroke="#4ADE80" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#cr2)"/>
+      </svg>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── 2. Wordmark ── -->
+<div class="section">
+  <div class="section-label">02 — Wordmark</div>
+  <div class="row">
+    <div class="card card-light">
+      <div class="wordmark" style="font-size:48px">
+        <span class="so">So</span><span class="no">No</span>
+      </div>
+    </div>
+    <div class="card card-dark">
+      <div class="wordmark on-dark" style="font-size:48px">
+        <span class="so">So</span><span class="no">No</span>
+      </div>
+    </div>
+    <div class="card card-mid">
+      <div class="wordmark" style="font-size:32px">
+        <span class="so">So</span><span class="no">No</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 3. Horizontal Lockup ── -->
+<div class="section">
+  <div class="section-label">03 — Horizontal Lockup (Icon + Wordmark)</div>
+  <div class="row">
+
+    <!-- Light background -->
+    <div class="card card-light" style="padding:28px 36px;">
+      <div class="lockup">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="52" height="52">
+          <defs>
+            <linearGradient id="bgH1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#0D1B3E"/><stop offset="100%" stop-color="#0F172A"/>
+            </linearGradient>
+            <linearGradient id="spH1" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#2563EB"/><stop offset="100%" stop-color="#3B82F6"/>
+            </linearGradient>
+            <filter id="glH1"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <clipPath id="clH1"><rect x="13" y="19" width="29" height="62" rx="2"/></clipPath>
+            <clipPath id="crH1"><rect x="58" y="19" width="29" height="62" rx="2"/></clipPath>
+          </defs>
+          <rect width="100" height="100" rx="22" fill="url(#bgH1)"/>
+          <rect x="13" y="19" width="29" height="62" rx="2" fill="#1E293B" stroke="#2D3F5B" stroke-width="0.5"/>
+          <rect x="58" y="19" width="29" height="62" rx="2" fill="#1E293B" stroke="#2D3F5B" stroke-width="0.5"/>
+          <rect x="39" y="15" width="22" height="70" rx="4" fill="url(#spH1)" filter="url(#glH1)"/>
+          <rect x="40" y="15" width="5" height="70" rx="3" fill="#60A5FA" opacity="0.35"/>
+          <line x1="19" y1="33" x2="37" y2="33" stroke="#F87171" stroke-width="1.8" stroke-linecap="round" clip-path="url(#clH1)"/>
+          <line x1="19" y1="43" x2="37" y2="43" stroke="#F87171" stroke-width="1.8" stroke-linecap="round" clip-path="url(#clH1)"/>
+          <line x1="19" y1="53" x2="34" y2="53" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#clH1)"/>
+          <line x1="19" y1="62" x2="30" y2="62" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#clH1)"/>
+          <line x1="19" y1="69" x2="37" y2="69" stroke="#334155" stroke-width="0.6" clip-path="url(#clH1)"/>
+          <line x1="63" y1="33" x2="81" y2="33" stroke="#4ADE80" stroke-width="1.8" stroke-linecap="round" clip-path="url(#crH1)"/>
+          <line x1="63" y1="43" x2="76" y2="43" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#crH1)"/>
+          <polyline points="64,57 70,64 81,51" stroke="#4ADE80" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#crH1)"/>
+        </svg>
+        <div class="lockup-meta">
+          <div class="wordmark" style="font-size:28px">
+            <span class="so">So</span><span class="no">No</span>
+          </div>
+          <span class="lockup-tagline">Sổ Nợ · Debt Book</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dark background -->
+    <div class="card card-dark" style="padding:28px 36px;">
+      <div class="lockup">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="52" height="52">
+          <defs>
+            <linearGradient id="bgH2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#0D1B3E"/><stop offset="100%" stop-color="#0F172A"/>
+            </linearGradient>
+            <linearGradient id="spH2" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stop-color="#2563EB"/><stop offset="100%" stop-color="#3B82F6"/>
+            </linearGradient>
+            <filter id="glH2"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <clipPath id="clH2"><rect x="13" y="19" width="29" height="62" rx="2"/></clipPath>
+            <clipPath id="crH2"><rect x="58" y="19" width="29" height="62" rx="2"/></clipPath>
+          </defs>
+          <rect width="100" height="100" rx="22" fill="url(#bgH2)"/>
+          <rect x="13" y="19" width="29" height="62" rx="2" fill="#1E293B" stroke="#2D3F5B" stroke-width="0.5"/>
+          <rect x="58" y="19" width="29" height="62" rx="2" fill="#1E293B" stroke="#2D3F5B" stroke-width="0.5"/>
+          <rect x="39" y="15" width="22" height="70" rx="4" fill="url(#spH2)" filter="url(#glH2)"/>
+          <rect x="40" y="15" width="5" height="70" rx="3" fill="#60A5FA" opacity="0.35"/>
+          <line x1="19" y1="33" x2="37" y2="33" stroke="#F87171" stroke-width="1.8" stroke-linecap="round" clip-path="url(#clH2)"/>
+          <line x1="19" y1="43" x2="37" y2="43" stroke="#F87171" stroke-width="1.8" stroke-linecap="round" clip-path="url(#clH2)"/>
+          <line x1="19" y1="53" x2="34" y2="53" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#clH2)"/>
+          <line x1="19" y1="62" x2="30" y2="62" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#clH2)"/>
+          <line x1="19" y1="69" x2="37" y2="69" stroke="#334155" stroke-width="0.6" clip-path="url(#clH2)"/>
+          <line x1="63" y1="33" x2="81" y2="33" stroke="#4ADE80" stroke-width="1.8" stroke-linecap="round" clip-path="url(#crH2)"/>
+          <line x1="63" y1="43" x2="76" y2="43" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#crH2)"/>
+          <polyline points="64,57 70,64 81,51" stroke="#4ADE80" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#crH2)"/>
+        </svg>
+        <div class="lockup-meta">
+          <div class="wordmark on-dark" style="font-size:28px">
+            <span class="so">So</span><span class="no">No</span>
+          </div>
+          <span class="lockup-tagline on-dark">Sổ Nợ · Debt Book</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── 4. Size Scale ── -->
+<div class="section">
+  <div class="section-label">04 — Icon Size Scale</div>
+  <div class="card card-light" style="justify-content:flex-start; padding:32px 40px;">
+    <div class="sizes">
+      <!-- Reusable inline icon via symbol is complex; just repeat SVG at each size -->
+      <!-- 16px favicon -->
+      <div class="size-item">
+        <div style="background:#0F172A;border-radius:4px;width:16px;height:16px;display:flex;align-items:center;justify-content:center;">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="14" height="14">
+            <defs>
+              <linearGradient id="spS16" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#2563EB"/><stop offset="100%" stop-color="#3B82F6"/></linearGradient>
+            </defs>
+            <rect x="13" y="19" width="29" height="62" rx="2" fill="#1E293B"/>
+            <rect x="58" y="19" width="29" height="62" rx="2" fill="#1E293B"/>
+            <rect x="39" y="15" width="22" height="70" rx="4" fill="url(#spS16)"/>
+            <line x1="19" y1="33" x2="37" y2="33" stroke="#F87171" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="19" y1="47" x2="37" y2="47" stroke="#F87171" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="63" y1="33" x2="81" y2="33" stroke="#4ADE80" stroke-width="2.5" stroke-linecap="round"/>
+            <polyline points="64,57 70,64 81,51" stroke="#4ADE80" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <span class="size-label">16px</span>
+      </div>
+
+      <!-- 24px -->
+      <div class="size-item">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
+          <defs>
+            <linearGradient id="spS24" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#2563EB"/><stop offset="100%" stop-color="#3B82F6"/></linearGradient>
+          </defs>
+          <rect width="100" height="100" rx="22" fill="#0F172A"/>
+          <rect x="13" y="19" width="29" height="62" rx="2" fill="#1E293B"/>
+          <rect x="58" y="19" width="29" height="62" rx="2" fill="#1E293B"/>
+          <rect x="39" y="15" width="22" height="70" rx="4" fill="url(#spS24)"/>
+          <line x1="19" y1="33" x2="37" y2="33" stroke="#F87171" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="19" y1="47" x2="37" y2="47" stroke="#F87171" stroke-width="2.5" stroke-linecap="round"/>
+          <line x1="63" y1="33" x2="81" y2="33" stroke="#4ADE80" stroke-width="2.5" stroke-linecap="round"/>
+          <polyline points="64,57 70,64 81,51" stroke="#4ADE80" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+        <span class="size-label">24px</span>
+      </div>
+
+      <!-- 40px -->
+      <div class="size-item">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="40" height="40">
+          <defs>
+            <linearGradient id="spS40" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#2563EB"/><stop offset="100%" stop-color="#3B82F6"/></linearGradient>
+            <filter id="glS40"><feGaussianBlur stdDeviation="1.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <clipPath id="clS40"><rect x="13" y="19" width="29" height="62" rx="2"/></clipPath>
+            <clipPath id="crS40"><rect x="58" y="19" width="29" height="62" rx="2"/></clipPath>
+          </defs>
+          <rect width="100" height="100" rx="22" fill="#0F172A"/>
+          <rect x="13" y="19" width="29" height="62" rx="2" fill="#1E293B" stroke="#2D3F5B" stroke-width="0.5"/>
+          <rect x="58" y="19" width="29" height="62" rx="2" fill="#1E293B" stroke="#2D3F5B" stroke-width="0.5"/>
+          <rect x="39" y="15" width="22" height="70" rx="4" fill="url(#spS40)" filter="url(#glS40)"/>
+          <rect x="40" y="15" width="5" height="70" rx="3" fill="#60A5FA" opacity="0.35"/>
+          <line x1="19" y1="33" x2="37" y2="33" stroke="#F87171" stroke-width="1.8" stroke-linecap="round" clip-path="url(#clS40)"/>
+          <line x1="19" y1="43" x2="37" y2="43" stroke="#F87171" stroke-width="1.8" stroke-linecap="round" clip-path="url(#clS40)"/>
+          <line x1="19" y1="53" x2="34" y2="53" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#clS40)"/>
+          <line x1="63" y1="33" x2="81" y2="33" stroke="#4ADE80" stroke-width="1.8" stroke-linecap="round" clip-path="url(#crS40)"/>
+          <polyline points="64,57 70,64 81,51" stroke="#4ADE80" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#crS40)"/>
+        </svg>
+        <span class="size-label">40px</span>
+      </div>
+
+      <!-- 64px -->
+      <div class="size-item">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="64" height="64">
+          <defs>
+            <linearGradient id="bgS64" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0D1B3E"/><stop offset="100%" stop-color="#0F172A"/></linearGradient>
+            <linearGradient id="spS64" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#2563EB"/><stop offset="100%" stop-color="#3B82F6"/></linearGradient>
+            <filter id="glS64"><feGaussianBlur stdDeviation="2" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <clipPath id="clS64"><rect x="13" y="19" width="29" height="62" rx="2"/></clipPath>
+            <clipPath id="crS64"><rect x="58" y="19" width="29" height="62" rx="2"/></clipPath>
+          </defs>
+          <rect width="100" height="100" rx="22" fill="url(#bgS64)"/>
+          <rect x="13" y="19" width="29" height="62" rx="2" fill="#1E293B" stroke="#2D3F5B" stroke-width="0.5"/>
+          <rect x="58" y="19" width="29" height="62" rx="2" fill="#1E293B" stroke="#2D3F5B" stroke-width="0.5"/>
+          <rect x="39" y="15" width="22" height="70" rx="4" fill="url(#spS64)" filter="url(#glS64)"/>
+          <rect x="40" y="15" width="5" height="70" rx="3" fill="#60A5FA" opacity="0.35"/>
+          <line x1="19" y1="33" x2="37" y2="33" stroke="#F87171" stroke-width="1.8" stroke-linecap="round" clip-path="url(#clS64)"/>
+          <line x1="19" y1="43" x2="37" y2="43" stroke="#F87171" stroke-width="1.8" stroke-linecap="round" clip-path="url(#clS64)"/>
+          <line x1="19" y1="53" x2="34" y2="53" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#clS64)"/>
+          <line x1="19" y1="62" x2="30" y2="62" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#clS64)"/>
+          <line x1="19" y1="69" x2="37" y2="69" stroke="#334155" stroke-width="0.6" clip-path="url(#clS64)"/>
+          <line x1="63" y1="33" x2="81" y2="33" stroke="#4ADE80" stroke-width="1.8" stroke-linecap="round" clip-path="url(#crS64)"/>
+          <line x1="63" y1="43" x2="76" y2="43" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#crS64)"/>
+          <polyline points="64,57 70,64 81,51" stroke="#4ADE80" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#crS64)"/>
+        </svg>
+        <span class="size-label">64px</span>
+      </div>
+
+      <!-- 96px -->
+      <div class="size-item">
+        <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="96" height="96">
+          <defs>
+            <linearGradient id="bgS96" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#0D1B3E"/><stop offset="100%" stop-color="#0F172A"/></linearGradient>
+            <linearGradient id="spS96" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#2563EB"/><stop offset="100%" stop-color="#3B82F6"/></linearGradient>
+            <filter id="glS96"><feGaussianBlur stdDeviation="2.5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+            <clipPath id="clS96"><rect x="13" y="19" width="29" height="62" rx="2"/></clipPath>
+            <clipPath id="crS96"><rect x="58" y="19" width="29" height="62" rx="2"/></clipPath>
+          </defs>
+          <rect width="100" height="100" rx="22" fill="url(#bgS96)"/>
+          <rect x="13" y="19" width="29" height="62" rx="2" fill="#1E293B" stroke="#2D3F5B" stroke-width="0.5"/>
+          <rect x="58" y="19" width="29" height="62" rx="2" fill="#1E293B" stroke="#2D3F5B" stroke-width="0.5"/>
+          <rect x="39" y="15" width="22" height="70" rx="4" fill="url(#spS96)" filter="url(#glS96)"/>
+          <rect x="40" y="15" width="5" height="70" rx="3" fill="#60A5FA" opacity="0.35"/>
+          <line x1="19" y1="33" x2="37" y2="33" stroke="#F87171" stroke-width="1.8" stroke-linecap="round" clip-path="url(#clS96)"/>
+          <line x1="19" y1="43" x2="37" y2="43" stroke="#F87171" stroke-width="1.8" stroke-linecap="round" clip-path="url(#clS96)"/>
+          <line x1="19" y1="53" x2="34" y2="53" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#clS96)"/>
+          <line x1="19" y1="62" x2="30" y2="62" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#clS96)"/>
+          <line x1="19" y1="69" x2="37" y2="69" stroke="#334155" stroke-width="0.6" clip-path="url(#clS96)"/>
+          <line x1="63" y1="33" x2="81" y2="33" stroke="#4ADE80" stroke-width="1.8" stroke-linecap="round" clip-path="url(#crS96)"/>
+          <line x1="63" y1="43" x2="76" y2="43" stroke="#94A3B8" stroke-width="1.2" stroke-linecap="round" clip-path="url(#crS96)"/>
+          <polyline points="64,57 70,64 81,51" stroke="#4ADE80" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" clip-path="url(#crS96)"/>
+        </svg>
+        <span class="size-label">96px</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 5. Color System ── -->
+<div class="section">
+  <div class="section-label">05 — Brand Colors</div>
+  <div class="swatches">
+    <div class="swatch">
+      <div class="swatch-block" style="background:#0F172A;"></div>
+      <span class="swatch-name">Navy</span>
+      <span class="swatch-hex">#0F172A</span>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#1E293B;"></div>
+      <span class="swatch-name">Page</span>
+      <span class="swatch-hex">#1E293B</span>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#2563EB;"></div>
+      <span class="swatch-name">Blue</span>
+      <span class="swatch-hex">#2563EB</span>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#3B82F6;"></div>
+      <span class="swatch-name">Blue Light</span>
+      <span class="swatch-hex">#3B82F6</span>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#F87171;border:1px solid #FCA5A5;"></div>
+      <span class="swatch-name">Debt</span>
+      <span class="swatch-hex">#F87171</span>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#4ADE80;border:1px solid #86EFAC;"></div>
+      <span class="swatch-name">Paid</span>
+      <span class="swatch-hex">#4ADE80</span>
+    </div>
+    <div class="swatch">
+      <div class="swatch-block" style="background:#F8FAFC;border:1px solid #E2E8F0;"></div>
+      <span class="swatch-name">BG</span>
+      <span class="swatch-hex">#F8FAFC</span>
+    </div>
+  </div>
+</div>
+
+<!-- ── 6. Don'ts ── -->
+<div class="section">
+  <div class="section-label">06 — Usage Don'ts</div>
+  <div class="dont-grid">
+    <div class="dont-card">
+      <div class="wordmark" style="font-size:28px;filter:grayscale(1);">
+        <span class="so" style="color:#666">So</span><span class="no" style="color:#666;font-weight:400">No</span>
+      </div>
+      <div style="font-size:11px;color:#94A3B8;margin-top:8px;">No grayscale / desaturated</div>
+    </div>
+    <div class="dont-card">
+      <div class="wordmark" style="font-size:28px;">
+        <span class="so" style="color:#9B59B6">So</span><span class="no" style="color:#E91E63">No</span>
+      </div>
+      <div style="font-size:11px;color:#94A3B8;margin-top:8px;">No off-brand colors</div>
+    </div>
+    <div class="dont-card">
+      <div class="wordmark" style="font-size:28px;font-family:Georgia,serif;">
+        <span class="so">So</span><span class="no" style="color:#2563EB">No</span>
+      </div>
+      <div style="font-size:11px;color:#94A3B8;margin-top:8px;">No serif / different typeface</div>
+    </div>
+    <div class="dont-card">
+      <div class="wordmark" style="font-size:28px;letter-spacing:0.2em;">
+        <span class="so">So</span><span class="no" style="color:#2563EB">No</span>
+      </div>
+      <div style="font-size:11px;color:#94A3B8;margin-top:8px;">No wide letter-spacing</div>
+    </div>
+  </div>
+</div>
+
+<!-- ── 7. Typography ── -->
+<div class="section">
+  <div class="section-label">07 — Typography</div>
+  <div class="card card-light" style="flex-direction:column;align-items:flex-start;gap:16px;padding:32px 40px;">
+    <div style="font-family:'IBM Plex Sans',sans-serif;font-size:36px;font-weight:700;color:#0F172A;letter-spacing:-0.03em;">IBM Plex Sans Bold</div>
+    <div style="font-family:'IBM Plex Sans',sans-serif;font-size:24px;font-weight:400;color:#334155;letter-spacing:-0.01em;">IBM Plex Sans Regular</div>
+    <div style="font-family:'IBM Plex Sans',sans-serif;font-size:16px;font-weight:300;color:#64748B;">IBM Plex Sans Light — Track debts and manage your money with clarity</div>
+    <div style="font-family:'IBM Plex Sans',sans-serif;font-size:13px;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;color:#94A3B8;">SONO · SỔ NỢ · DEBT BOOK</div>
+  </div>
+</div>
+
+</body>
+</html>
