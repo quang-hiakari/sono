@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Home, List, CreditCard, PlusCircle, History, ArrowLeft } from 'lucide-react';
+import { Home, CheckCircle, PlusCircle, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { DebtBook } from '@/lib/queries/books';
 
@@ -22,13 +22,11 @@ export function BookShell({ children, book, isCreditor }: BookShellProps) {
 
   const creditorLinks = [
     { href: `/books/${bookId}`, label: 'Tổng quan', icon: Home },
-    { href: `/books/${bookId}/debts`, label: 'Khoản nợ', icon: List },
-    { href: `/books/${bookId}/payments`, label: 'Thanh toán', icon: CreditCard },
+    { href: `/books/${bookId}/payments`, label: 'Phê duyệt', icon: CheckCircle },
   ];
   const debtorLinks = [
     { href: `/books/${bookId}`, label: 'Tổng quan', icon: Home },
     { href: `/books/${bookId}/payments/new`, label: 'Trả nợ', icon: PlusCircle },
-    { href: `/books/${bookId}/payments`, label: 'Lịch sử', icon: History },
   ];
   const links = isCreditor ? creditorLinks : debtorLinks;
 
@@ -51,7 +49,8 @@ export function BookShell({ children, book, isCreditor }: BookShellProps) {
               Hồ sơ
             </Link>
             <form action="/logout" method="POST">
-              <button type="submit" className="text-xs text-slate-400 hover:text-slate-700 px-2 py-1">
+              <button type="submit" className="text-xs text-red-400 hover:text-red-600 px-2 py-1 flex items-center gap-1">
+                <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
                 Đăng xuất
               </button>
             </form>

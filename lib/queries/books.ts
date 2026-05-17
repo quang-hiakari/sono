@@ -16,7 +16,8 @@ export interface DebtBook {
 const BOOK_SELECT = `
   SELECT b.id, b.name, b.creditor_id, b.debtor_id, b.currency, b.created_at,
     c.email AS creditor_email, COALESCE(cp.full_name, NULLIF(c.name, '')) AS creditor_name,
-    d.email AS debtor_email,  COALESCE(dp.full_name, NULLIF(d.name, '')) AS debtor_name
+    d.email AS debtor_email,
+    COALESCE(b.debtor_display_name, dp.full_name, NULLIF(d.name, '')) AS debtor_name
   FROM debt_books b
   JOIN "user" c ON c.id = b.creditor_id
   JOIN "user" d ON d.id = b.debtor_id

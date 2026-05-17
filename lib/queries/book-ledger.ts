@@ -13,6 +13,7 @@ export interface Debt {
   title: string;
   amount: number;
   notes: string | null;
+  invoice_url: string | null;
   debt_date: string;
   created_at: string;
 }
@@ -45,7 +46,7 @@ export async function getLedgerTotals(bookId: string): Promise<LedgerTotals> {
 export async function getDebts(bookId: string): Promise<Debt[]> {
   const db = getDB();
   const { results } = await db.prepare(
-    'SELECT id, book_id, title, amount, notes, debt_date, created_at FROM debts WHERE book_id = ? ORDER BY created_at DESC'
+    'SELECT id, book_id, title, amount, notes, NULL as invoice_url, debt_date, created_at FROM debts WHERE book_id = ? ORDER BY created_at DESC'
   ).bind(bookId).all<Debt>();
   return results;
 }

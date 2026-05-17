@@ -12,6 +12,7 @@ const currencyCodes = CURRENCIES.map(c => c.code) as [string, ...string[]];
 const schema = z.object({
   name: z.string().min(1).max(100),
   debtorEmail: z.string().email(),
+  debtorName: z.string().max(80).optional(),
   currency: z.enum(currencyCodes).default('VND'),
 });
 
@@ -22,11 +23,12 @@ export async function createBook(formData: FormData) {
   const parsed = schema.safeParse({
     name: formData.get('name'),
     debtorEmail: formData.get('debtorEmail'),
+    debtorName: (formData.get('debtorName') as string)?.trim() || undefined,
     currency: formData.get('currency') || 'VND',
   });
   if (!parsed.success) return { error: 'Dữ liệu không hợp lệ.' };
 
-  const { name, debtorEmail, currency } = parsed.data;
+  const { name, debtorEmail, debtorName, currency } = parsed.data;
 
   if (debtorEmail.toLowerCase() === me.email.toLowerCase()) {
     return { error: 'Không thể tạo sổ nợ với chính mình.' };
@@ -64,8 +66,8 @@ export async function createBook(formData: FormData) {
 
   const id = crypto.randomUUID();
   try {
-    await db.prepare('INSERT INTO debt_books (id, name, creditor_id, debtor_id, currency) VALUES (?, ?, ?, ?, ?)')
-      .bind(id, name, me.id, debtor.id, currency).run();
+    await db.prepare('INSERT INTO debt_books (id, name, creditor_id, debtor_id, currency, debtor_display_name) VALUES (?, ?, ?, ?, ?, ?)')
+      .bind(id, name, me.id, debtor.id, currency, debtorName ?? null).run();
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : '';
     if (msg.includes('UNIQUE')) return { error: 'Bạn đã có sổ nợ với người này rồi.' };

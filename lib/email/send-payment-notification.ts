@@ -1,5 +1,5 @@
 import { Resend } from 'resend';
-import { formatVND } from '@/lib/format/currency';
+import { formatAmount } from '@/lib/format/currency';
 import { formatDateTime } from '@/lib/format/date';
 
 function escapeHtml(str: string): string {
@@ -15,6 +15,7 @@ interface PaymentNotificationParams {
   to: string;
   debtorName: string;
   amount: number;
+  currency?: string;
   note?: string | null;
   createdAt: string;
   receiptUrl: string | null;
@@ -23,7 +24,7 @@ interface PaymentNotificationParams {
 
 export async function sendPaymentNotification(p: PaymentNotificationParams) {
   const resend = new Resend(process.env.RESEND_API_KEY);
-  const vnd = formatVND(p.amount);
+  const vnd = formatAmount(p.amount, p.currency ?? 'VND');
   const dt = formatDateTime(p.createdAt);
 
   await resend.emails.send({

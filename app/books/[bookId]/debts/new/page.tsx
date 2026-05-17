@@ -1,12 +1,10 @@
-import { getBook } from '@/lib/queries/books';
+'use client';
+
+import { useParams, useSearchParams } from 'next/navigation';
 import { DebtForm } from './debt-form';
 
-interface Props { params: Promise<{ bookId: string }> }
-
-export default async function NewDebtPage({ params }: Props) {
-  const { bookId } = await params;
-  const book = await getBook(bookId);
-  if (!book) return null;
-
-  return <DebtForm bookId={bookId} currency={book.currency} />;
+export default function NewDebtPage() {
+  const { bookId } = useParams<{ bookId: string }>();
+  const currency = useSearchParams().get('currency') || 'VND';
+  return <DebtForm bookId={bookId} currency={currency} />;
 }

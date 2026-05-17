@@ -3,11 +3,10 @@
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
 import { UserProfile } from '@/lib/queries/profile';
-import { updateProfile, uploadQR } from './actions';
 
 interface ProfileFormProps {
   profile: UserProfile | null;
-  qrSignedUrl: string | null;
+  userId: string;
 }
 
 function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -36,30 +35,39 @@ function FormInput({ id, name, defaultValue, placeholder, maxLength, inputMode, 
   className?: string;
 }) {
   return (
-    <input
-      id={id}
-      name={name}
-      defaultValue={defaultValue ?? ''}
-      placeholder={placeholder}
-      maxLength={maxLength}
-      inputMode={inputMode}
+    <input id={id} name={name} defaultValue={defaultValue ?? ''} placeholder={placeholder}
+      maxLength={maxLength} inputMode={inputMode}
       className={`w-full bg-slate-50 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 focus:outline-none focus:border-[#00c9a7]/60 dark:focus:border-[#00c9a7]/50 focus:bg-white dark:focus:bg-white/[0.07] transition-colors ${className ?? ''}`}
     />
   );
 }
 
-export function ProfileForm({ profile, qrSignedUrl }: ProfileFormProps) {
+export function ProfileForm({ profile, userId }: ProfileFormProps) {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
-  const [localQrUrl, setLocalQrUrl] = useState<string | null>(qrSignedUrl);
+  const [qrBust, setQrBust] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
+
+  const hasQr = !!profile?.bank_qr_url;
+  const qrUrl = hasQr || qrBust > 0 ? `/api/qr/${userId}?t=${qrBust}` : null;
 
   async function handleSave(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     setSaving(true);
-    const result = await updateProfile(new FormData(e.currentTarget));
+    const fd = new FormData(e.currentTarget);
+    const res = await fetch('/api/profile', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        full_name: fd.get('full_name') || undefined,
+        bank_name: fd.get('bank_name') || undefined,
+        account_number: fd.get('account_number') || undefined,
+        account_holder: fd.get('account_holder') || undefined,
+      }),
+    });
     setSaving(false);
-    if (result?.error) toast.error(result.error);
+    const result = await res.json().catch(() => ({})) as { error?: string };
+    if (result.error) toast.error(result.error);
     else toast.success('Đã lưu thông tin.');
   }
 
@@ -67,13 +75,16 @@ export function ProfileForm({ profile, qrSignedUrl }: ProfileFormProps) {
     const file = e.target.files?.[0];
     if (!file) return;
     setUploading(true);
-    const fd = new FormData();
-    fd.append('file', file);
-    const result = await uploadQR(fd);
+    const res = await fetch('/api/profile/qr', {
+      method: 'POST',
+      headers: { 'Content-Type': file.type || 'image/jpeg' },
+      body: file,
+    });
     setUploading(false);
-    if (result?.error) toast.error(result.error);
+    const result = await res.json().catch(() => ({})) as { error?: string };
+    if (result.error) toast.error(result.error);
     else {
-      setLocalQrUrl(URL.createObjectURL(file));
+      setQrBust(Date.now());
       toast.success('Đã tải ảnh QR.');
     }
   }
@@ -99,30 +110,23 @@ export function ProfileForm({ profile, qrSignedUrl }: ProfileFormProps) {
           </FormField>
         </FormSection>
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="w-full bg-[#00c9a7] hover:bg-[#00b498] disabled:opacity-50 text-[#0d0d0f] font-bold py-3.5 rounded-2xl text-sm transition-colors"
-        >
+        <button type="submit" disabled={saving}
+          className="w-full bg-[#00c9a7] hover:bg-[#00b498] disabled:opacity-50 text-[#0d0d0f] font-bold py-3.5 rounded-2xl text-sm transition-colors">
           {saving ? 'Đang lưu...' : 'Lưu thông tin'}
         </button>
       </form>
 
       <FormSection title="Mã QR chuyển khoản">
-        {localQrUrl && (
+        {qrUrl && (
           <div className="flex justify-center py-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={localQrUrl} alt="QR chuyển khoản" className="w-48 h-48 object-contain rounded-xl border border-slate-200 dark:border-white/[0.08]" />
+            <img src={qrUrl} alt="QR chuyển khoản" className="w-full object-contain rounded-xl border border-slate-200 dark:border-white/[0.08]" />
           </div>
         )}
         <input ref={fileRef} type="file" accept="image/*" onChange={handleQrUpload} className="hidden" />
-        <button
-          type="button"
-          onClick={() => fileRef.current?.click()}
-          disabled={uploading}
-          className="w-full py-3 rounded-xl border border-slate-200 dark:border-white/[0.08] text-slate-400 dark:text-white/45 text-sm font-medium hover:text-slate-600 dark:hover:text-white/65 hover:border-slate-300 dark:hover:border-white/15 disabled:opacity-50 transition-colors"
-        >
-          {uploading ? 'Đang tải...' : localQrUrl ? 'Đổi ảnh QR' : 'Tải ảnh QR lên'}
+        <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
+          className="w-full py-3 rounded-xl border border-slate-200 dark:border-white/[0.08] text-slate-400 dark:text-white/45 text-sm font-medium hover:text-slate-600 dark:hover:text-white/65 hover:border-slate-300 dark:hover:border-white/15 disabled:opacity-50 transition-colors">
+          {uploading ? 'Đang tải...' : qrUrl ? 'Đổi ảnh QR' : 'Tải ảnh QR lên'}
         </button>
         <p className="text-xs text-slate-400 dark:text-white/25 text-center">Ảnh QR từ app ngân hàng của bạn (tối đa 3MB)</p>
       </FormSection>

@@ -1,9 +1,8 @@
 import Link from 'next/link';
-import { PlusCircle, ExternalLink } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { getBook } from '@/lib/queries/books';
 import { getAllPayments, getPendingPayments, getMyPayments } from '@/lib/queries/book-ledger';
-import { getPresignedUrls } from '@/lib/r2-presign';
 import { formatAmount } from '@/lib/format/currency';
 import { formatDate } from '@/lib/format/date';
 import { PageContainer } from '@/components/shell/page-container';
@@ -11,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { EmptyState } from '@/components/states/empty-state';
 import { PaymentApprovalCard } from './components/payment-approval-card';
 import { PaymentStatusBadge } from './components/payment-status-badge';
+import { ReceiptDialog } from './components/receipt-dialog';
 
 interface Props { params: Promise<{ bookId: string }> }
 
@@ -27,7 +27,6 @@ export default async function PaymentsPage({ params }: Props) {
       getAllPayments(bookId),
     ]);
     const approved = all.filter(p => p.status === 'approved');
-    const signedUrls = await getPresignedUrls(pending.map(p => p.receipt_url));
 
     return (
       <PageContainer>
@@ -39,12 +38,7 @@ export default async function PaymentsPage({ params }: Props) {
               </CardHeader>
               <CardContent className="space-y-3">
                 {pending.map(p => (
-                  <PaymentApprovalCard
-                    key={p.id}
-                    payment={p}
-                    bookId={bookId}
-                    receiptUrl={p.receipt_url ? (signedUrls[p.receipt_url] ?? null) : null}
-                  />
+                  <PaymentApprovalCard key={p.id} payment={p} bookId={bookId} currency={book.currency} />
                 ))}
               </CardContent>
             </Card>
@@ -80,15 +74,12 @@ export default async function PaymentsPage({ params }: Props) {
 
   // Debtor view
   const payments = await getMyPayments(bookId, me!.id);
-  const signedUrls = await getPresignedUrls(payments.map(p => p.receipt_url));
 
   return (
     <PageContainer>
       <div className="space-y-4">
-        <Link
-          href={`/books/${bookId}/payments/new`}
-          className="flex items-center justify-center gap-2 w-full h-12 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700"
-        >
+        <Link href={`/books/${bookId}/payments/new`}
+          className="flex items-center justify-center gap-2 w-full h-12 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700">
           <PlusCircle size={18} /> Trả nợ mới
         </Link>
 
@@ -101,40 +92,29 @@ export default async function PaymentsPage({ params }: Props) {
               <EmptyState message="Bạn chưa có lịch sử thanh toán." />
             ) : (
               <div className="divide-y divide-gray-100">
-                {payments.map(p => {
-                  const receiptUrl = p.receipt_url ? (signedUrls[p.receipt_url] ?? null) : null;
-                  return (
-                    <div key={p.id} className="py-3 space-y-1">
-                      <div className="flex items-center justify-between gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-slate-800">{formatAmount(p.amount, book.currency)}</p>
-                          <p className="text-xs text-slate-400">{formatDate(p.created_at)}</p>
-                          {p.note && <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{p.note}</p>}
-                        </div>
-                        <div className="flex flex-col items-end gap-1">
-                          <PaymentStatusBadge status={p.status} />
-                          {receiptUrl && (
-                            <a href={receiptUrl} target="_blank" rel="noopener noreferrer"
-                              className="inline-flex items-center gap-0.5 text-xs text-blue-600 hover:underline">
-                              Biên lai <ExternalLink size={10} />
-                            </a>
-                          )}
-                        </div>
+                {payments.map(p => (
+                  <div key={p.id} className="py-3 space-y-1">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-slate-800">{formatAmount(p.amount, book.currency)}</p>
+                        <p className="text-xs text-slate-400">{formatDate(p.created_at)}</p>
+                        {p.note && <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{p.note}</p>}
                       </div>
-                      {p.status === 'rejected' && p.rejection_reason && (
-                        <p className="text-xs text-red-500 italic pl-0.5">
-                          Lý do: {p.rejection_reason}
-                        </p>
-                      )}
-                      {p.status === 'rejected' && (
-                        <Link href={`/books/${bookId}/payments/new`}
-                          className="text-xs text-blue-600 hover:underline">
-                          Nộp lại →
-                        </Link>
-                      )}
+                      <div className="flex flex-col items-end gap-1">
+                        <PaymentStatusBadge status={p.status} />
+                        {p.receipt_url && <ReceiptDialog receiptPath={p.receipt_url} />}
+                      </div>
                     </div>
-                  );
-                })}
+                    {p.status === 'rejected' && p.rejection_reason && (
+                      <p className="text-xs text-red-500 italic pl-0.5">Lý do: {p.rejection_reason}</p>
+                    )}
+                    {p.status === 'rejected' && (
+                      <Link href={`/books/${bookId}/payments/new`} className="text-xs text-blue-600 hover:underline">
+                        Nộp lại →
+                      </Link>
+                    )}
+                  </div>
+                ))}
               </div>
             )}
           </CardContent>

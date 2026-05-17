@@ -54,7 +54,7 @@ const features = [
   { icon: <CameraIcon />, text: 'Người nợ gửi biên lai ảnh kèm mỗi thanh toán' },
   { icon: <CheckCircleIcon />, text: 'Chủ nợ xem và duyệt từng khoản — minh bạch, không tranh cãi' },
   { icon: <BellIcon />, text: 'Nhận email ngay khi có thanh toán mới chờ duyệt' },
-  { icon: <UsersIcon />, text: 'Tạo nhiều sổ nợ riêng với bất kỳ ai đã có tài khoản' },
+  { icon: <UsersIcon />, text: 'Tạo sổ nợ với bất kỳ ai — chưa có tài khoản vẫn được' },
 ];
 
 const mockEntries = [

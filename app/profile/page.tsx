@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { getProfile } from '@/lib/queries/profile';
-import { getPresignedUrl } from '@/lib/r2-presign';
 import { ProfileForm } from './profile-form';
 import { ThemeToggle } from '@/components/shell/theme-toggle';
 
@@ -12,10 +11,6 @@ export default async function ProfilePage() {
   if (!me) redirect('/login');
 
   const profile = await getProfile(me.id);
-  let qrSignedUrl: string | null = null;
-  if (profile?.bank_qr_url) {
-    qrSignedUrl = await getPresignedUrl(profile.bank_qr_url, 3600).catch(() => null);
-  }
 
   const displayName = profile?.full_name || me.name || '';
   const initial = (displayName[0] || me.email?.[0] || '?').toUpperCase();
@@ -43,13 +38,14 @@ export default async function ProfilePage() {
           </div>
         </div>
 
-        <ProfileForm profile={profile} qrSignedUrl={qrSignedUrl} />
+        <ProfileForm profile={profile} userId={me.id} />
 
         <form action="/logout" method="POST">
           <button
             type="submit"
-            className="w-full py-3.5 rounded-2xl border border-slate-200 dark:border-white/[0.08] text-slate-400 dark:text-white/40 text-sm font-medium hover:text-slate-600 dark:hover:text-white/60 hover:border-slate-300 dark:hover:border-white/15 transition-colors"
+            className="w-full py-3.5 rounded-2xl border border-red-200 dark:border-red-900/40 text-red-500 dark:text-red-400 text-sm font-medium hover:bg-red-50 dark:hover:bg-red-900/20 hover:border-red-300 transition-colors flex items-center justify-center gap-2"
           >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
             Đăng xuất
           </button>
         </form>

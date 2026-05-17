@@ -25,13 +25,13 @@ export default async function DebtsPage({ params }: Props) {
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">Tất cả khoản nợ</CardTitle>
           {isCreditor && (
-            <Link href={`/books/${bookId}/debts/new`} className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline">
+            <Link href={`/books/${bookId}/debts/new?currency=${book.currency}`} className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline">
               <Plus size={14} /> Thêm mới
             </Link>
           )}
         </CardHeader>
         <CardContent>
-          <DebtsList debts={debts} bookId={bookId} isCreditor={isCreditor} />
+          <DebtsList debts={debts} bookId={bookId} isCreditor={isCreditor} currency={book.currency} />
         </CardContent>
       </Card>
     </PageContainer>

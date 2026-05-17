@@ -1,17 +1,15 @@
-import Link from 'next/link';
-import { Plus, Clock } from 'lucide-react';
+import { Clock } from 'lucide-react';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { getBook } from '@/lib/queries/books';
-import { getLedgerTotals, getDebts, getPendingPayments, getMyPayments } from '@/lib/queries/book-ledger';
+import { getLedgerTotals, getDebts, getAllPayments, getMyPayments } from '@/lib/queries/book-ledger';
 import { getProfile } from '@/lib/queries/profile';
-import { getPresignedUrl } from '@/lib/r2-presign';
 import { formatAmount } from '@/lib/format/currency';
-import { formatDate } from '@/lib/format/date';
 import { PageContainer } from '@/components/shell/page-container';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { EmptyState } from '@/components/states/empty-state';
+import { Card, CardContent } from '@/components/ui/card';
 import { BankingInfoPanel } from './components/banking-info-panel';
+import { DeleteBookButton } from './components/delete-book-button';
+import { EditBookButton } from './components/edit-book-button';
+import { BookDetailTabs } from './components/book-detail-tabs';
 
 interface Props { params: Promise<{ bookId: string }> }
 
@@ -22,26 +20,24 @@ export default async function BookPage({ params }: Props) {
   if (!book) return null;
 
   const isCreditor = book.creditor_id === me!.id;
-  const fmt = (amount: number) => formatAmount(amount, book.currency);
+  const fmt = (n: number) => formatAmount(n, book.currency);
 
-  const [totals, recentDebts, creditorProfile] = await Promise.all([
+  const [totals, debts, creditorProfile, payments] = await Promise.all([
     getLedgerTotals(bookId),
     getDebts(bookId),
     getProfile(book.creditor_id),
+    isCreditor ? getAllPayments(bookId) : getMyPayments(bookId, me!.id),
   ]);
-  const debtSlice = recentDebts.slice(0, 5);
 
-  const pendingPayments = isCreditor ? await getPendingPayments(bookId) : [];
-  const myPayments = !isCreditor ? await getMyPayments(bookId, me!.id) : [];
-  const myRecentPayments = myPayments.slice(0, 3);
+  const bankingProfile = creditorProfile ? {
+    bank_name: creditorProfile.bank_name,
+    account_number: creditorProfile.account_number,
+    account_holder: creditorProfile.account_holder,
+    creditor_id: book.creditor_id,
+    has_qr: !!creditorProfile.bank_qr_url,
+  } : null;
 
-  let qrSignedUrl: string | null = null;
-  if (creditorProfile?.bank_qr_url) {
-    qrSignedUrl = await getPresignedUrl(creditorProfile.bank_qr_url, 3600).catch(() => null);
-  }
-  const bankingProfile = creditorProfile
-    ? { ...creditorProfile, qr_signed_url: qrSignedUrl }
-    : null;
+  const pendingCount = payments.filter(p => p.status === 'pending').length;
 
   return (
     <PageContainer>
@@ -49,6 +45,11 @@ export default async function BookPage({ params }: Props) {
         {/* Summary card */}
         <Card>
           <CardContent className="p-4 space-y-4">
+            {isCreditor && (
+              <div className="flex justify-end">
+                <EditBookButton bookId={bookId} currentName={book.name} currentDebtorName={book.debtor_name || ''} />
+              </div>
+            )}
             <div className="text-center py-2">
               <p className="text-xs text-slate-500 mb-1">Còn lại</p>
               <p className={`text-4xl font-bold ${totals.remaining > 0 ? 'text-red-600' : 'text-green-600'}`}>
@@ -65,109 +66,29 @@ export default async function BookPage({ params }: Props) {
                 <p className="font-semibold text-green-600">{fmt(totals.paid)}</p>
               </div>
             </div>
-            {totals.pendingCount > 0 && (
+            {pendingCount > 0 && (
               <div className="flex items-center justify-center gap-1.5 bg-yellow-50 border border-yellow-200 rounded-lg py-2 text-sm text-yellow-700">
                 <Clock size={14} />
-                <span>{totals.pendingCount} thanh toán chờ duyệt</span>
+                <span>{pendingCount} thanh toán chờ duyệt</span>
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Banking info panel (shown to both roles) */}
+        {/* Banking info */}
         <BankingInfoPanel profile={bankingProfile} />
 
-        {/* Creditor: pending approvals */}
-        {isCreditor && pendingPayments.length > 0 && (
-          <Card className="border-yellow-200">
-            <CardHeader>
-              <CardTitle className="text-base text-yellow-700">Chờ duyệt ({pendingPayments.length})</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <Link href={`/books/${bookId}/payments`} className="text-sm text-blue-600 hover:underline">
-                Xem và duyệt thanh toán →
-              </Link>
-            </CardContent>
-          </Card>
-        )}
+        {/* Tabs: Khoản nợ / Thanh Toán */}
+        <BookDetailTabs
+          bookId={bookId}
+          currency={book.currency}
+          isCreditor={isCreditor}
+          debts={debts}
+          payments={payments}
+        />
 
-        {/* Creditor: recent debts */}
-        {isCreditor && (
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="text-base">Khoản nợ gần đây</CardTitle>
-              <Link href={`/books/${bookId}/debts/new`} className="inline-flex items-center gap-1 text-sm text-blue-600 hover:underline">
-                <Plus size={14} /> Thêm
-              </Link>
-            </CardHeader>
-            <CardContent>
-              {debtSlice.length === 0 ? (
-                <EmptyState message="Chưa có khoản nợ nào. Bấm + để thêm." />
-              ) : (
-                <div className="divide-y divide-gray-100">
-                  {debtSlice.map(d => (
-                    <div key={d.id} className="flex items-center justify-between py-2.5">
-                      <div>
-                        <p className="text-sm font-medium text-slate-800">{d.title}</p>
-                        <p className="text-xs text-slate-400">{formatDate(d.debt_date)}</p>
-                      </div>
-                      <p className="font-semibold text-red-600 text-sm">{fmt(d.amount)}</p>
-                    </div>
-                  ))}
-                </div>
-              )}
-              {recentDebts.length > 5 && (
-                <Link href={`/books/${bookId}/debts`} className="block text-center text-sm text-blue-600 mt-3 hover:underline">
-                  Xem tất cả →
-                </Link>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Debtor: pay now CTA + recent payments */}
-        {!isCreditor && (
-          <>
-            <Button asChild className="w-full" size="lg">
-              <Link href={`/books/${bookId}/payments/new`}>
-                <Plus size={18} /> Trả nợ ngay
-              </Link>
-            </Button>
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base">Thanh toán gần đây</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {myRecentPayments.length === 0 ? (
-                  <EmptyState message="Bạn chưa có lịch sử thanh toán." />
-                ) : (
-                  <div className="divide-y divide-gray-100">
-                    {myRecentPayments.map(p => (
-                      <div key={p.id} className="flex items-center justify-between py-2.5">
-                        <div>
-                          <p className="font-semibold text-slate-800 text-sm">{fmt(p.amount)}</p>
-                          <p className="text-xs text-slate-400">{formatDate(p.created_at)}</p>
-                        </div>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                          p.status === 'pending' ? 'bg-yellow-100 text-yellow-700' :
-                          p.status === 'approved' ? 'bg-green-100 text-green-700' :
-                          'bg-red-100 text-red-700'
-                        }`}>
-                          {p.status === 'pending' ? 'Chờ duyệt' : p.status === 'approved' ? 'Đã duyệt' : 'Bị từ chối'}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-                {myPayments.length > 3 && (
-                  <Link href={`/books/${bookId}/payments`} className="block text-center text-sm text-blue-600 mt-3 hover:underline">
-                    Xem tất cả →
-                  </Link>
-                )}
-              </CardContent>
-            </Card>
-          </>
-        )}
+        {/* Danger zone */}
+        {isCreditor && <DeleteBookButton bookId={bookId} />}
       </div>
     </PageContainer>
   );

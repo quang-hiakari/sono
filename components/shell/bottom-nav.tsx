@@ -35,6 +35,9 @@ const TABS = [
 
 export function BottomNav() {
   const pathname = usePathname();
+  // BookShell has its own nav for book-specific pages — hide global nav there
+  const isInsideBook = /^\/books\/(?!home$|home\/|debtors$|debtors\/|new$|new\/)[^/]+/.test(pathname);
+  if (isInsideBook) return null;
   return (
     <nav className="fixed bottom-0 inset-x-0 z-50 bg-white/95 dark:bg-[#18181f]/95 backdrop-blur-xl border-t border-slate-200 dark:border-white/[0.07]">
       <div className="max-w-3xl mx-auto flex">

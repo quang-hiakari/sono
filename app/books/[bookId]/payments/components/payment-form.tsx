@@ -10,7 +10,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { CurrencyAmountInput } from '@/components/ui/currency-amount-input';
 import { compressImage } from '@/lib/upload/compress-image';
 import { uploadReceipt } from '@/lib/upload/upload-receipt';
-import { createPayment } from '../actions';
 
 export function PaymentForm({ bookId, currency }: { bookId: string; currency: string }) {
   const router = useRouter();
@@ -32,22 +31,31 @@ export function PaymentForm({ bookId, currency }: { bookId: string; currency: st
 
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    const form = e.currentTarget; // capture before any await
     if (!file) { toast.error('Vui lòng chọn ảnh biên lai.'); return; }
     setSubmitting(true);
     try {
       const compressed = await compressImage(file);
       const receiptPath = await uploadReceipt(compressed);
-      const formData = new FormData(e.currentTarget);
-      formData.set('receipt_path', receiptPath);
-      const result = await createPayment(bookId, formData);
-      if (result?.error) {
-        toast.error(result.error);
+      const fd = new FormData(form);
+      const res = await fetch(`/api/books/${bookId}/payments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: Number(fd.get('amount')),
+          note: fd.get('note') || undefined,
+          receipt_path: receiptPath,
+        }),
+      });
+      const result = await res.json().catch(() => ({})) as { ok?: boolean; error?: string };
+      if (!res.ok || result.error) {
+        throw new Error(result.error || `Lỗi ${res.status}`);
       } else {
         toast.success('Đã gửi thanh toán! Chờ duyệt.');
         router.push(`/books/${bookId}`);
       }
-    } catch {
-      toast.error('Tải ảnh thất bại. Vui lòng thử lại.');
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Có lỗi xảy ra. Vui lòng thử lại.');
     } finally {
       setSubmitting(false);
     }
@@ -73,11 +81,11 @@ export function PaymentForm({ bookId, currency }: { bookId: string; currency: st
           type="button"
           onClick={() => fileRef.current?.click()}
           disabled={submitting}
-          className="w-full h-36 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-2 text-slate-500 hover:border-blue-400 hover:text-blue-600 transition-colors overflow-hidden"
+          className="w-full min-h-36 rounded-lg border-2 border-dashed border-gray-300 flex flex-col items-center justify-center gap-2 text-slate-500 hover:border-blue-400 hover:text-blue-600 transition-colors overflow-hidden"
         >
           {preview ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={preview} alt="Preview" className="h-full w-full object-cover" />
+            <img src={preview} alt="Preview" className="w-full object-contain rounded-lg" />
           ) : (
             <><ImageIcon size={28} /><span className="text-sm">Chụp hoặc chọn ảnh</span></>
           )}

@@ -44,6 +44,20 @@ export async function createDebt(bookId: string, formData: FormData) {
   return {};
 }
 
+// useActionState-compatible: bookId via hidden _bookId, date via debt_date_display (dd/mm/yyyy)
+export async function createDebtFormAction(
+  _prevState: { error?: string } | null,
+  formData: FormData
+) {
+  const bookId = formData.get('_bookId') as string;
+  const display = formData.get('debt_date_display') as string | null;
+  if (display) {
+    const m = display.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+    formData.set('debt_date', m ? `${m[3]}-${m[2]}-${m[1]}` : new Date().toISOString().split('T')[0]);
+  }
+  return createDebt(bookId, formData);
+}
+
 export async function deleteDebt(bookId: string, debtId: string) {
   const ctx = await verifyCreditor(bookId);
   if (!ctx) return { error: 'Không có quyền.' };

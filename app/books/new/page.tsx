@@ -80,6 +80,17 @@ export default function NewBookPage() {
                   Nếu chưa có tài khoản, SoNo sẽ tự tạo và gửi email mời họ.
                 </p>
               </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="debtorName">Tên người nợ</Label>
+                <Input
+                  id="debtorName"
+                  name="debtorName"
+                  maxLength={80}
+                  placeholder="Ví dụ: Anh Tuấn (không bắt buộc)"
+                  autoComplete="off"
+                />
+                <p className="text-xs text-slate-400">Tên hiển thị cho người này trong sổ nợ của bạn.</p>
+              </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Đang tạo...' : 'Tạo sổ nợ'}
               </Button>
