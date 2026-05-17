@@ -30,7 +30,7 @@ export default async function NewPaymentPage({ params }: Props) {
           <p className="text-xs text-slate-400">Thanh toán sẽ hiển thị trạng thái &ldquo;chờ duyệt&rdquo; cho đến khi được xác nhận.</p>
         </CardHeader>
         <CardContent>
-          <PaymentForm bookId={bookId} />
+          <PaymentForm bookId={bookId} currency={book.currency} />
         </CardContent>
       </Card>
     </PageContainer>

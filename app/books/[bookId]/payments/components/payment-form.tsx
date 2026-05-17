@@ -5,14 +5,14 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { CurrencyAmountInput } from '@/components/ui/currency-amount-input';
 import { compressImage } from '@/lib/upload/compress-image';
 import { uploadReceipt } from '@/lib/upload/upload-receipt';
 import { createPayment } from '../actions';
 
-export function PaymentForm({ bookId }: { bookId: string }) {
+export function PaymentForm({ bookId, currency }: { bookId: string; currency: string }) {
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
@@ -56,8 +56,14 @@ export function PaymentForm({ bookId }: { bookId: string }) {
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="amount">Số tiền (VNĐ) *</Label>
-        <Input id="amount" name="amount" type="number" required min={1} step={1000} inputMode="numeric" placeholder="500000" disabled={submitting} />
+        <Label htmlFor="amount">Số tiền ({currency}) *</Label>
+        <CurrencyAmountInput
+          currency={currency}
+          name="amount"
+          required
+          disabled={submitting}
+          placeholder="500,000"
+        />
       </div>
 
       <div className="space-y-1.5">

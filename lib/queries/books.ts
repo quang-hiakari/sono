@@ -5,6 +5,7 @@ export interface DebtBook {
   name: string;
   creditor_id: string;
   debtor_id: string;
+  currency: string;
   creditor_email: string;
   creditor_name: string;
   debtor_email: string;
@@ -12,15 +13,21 @@ export interface DebtBook {
   created_at: string;
 }
 
+const BOOK_SELECT = `
+  SELECT b.id, b.name, b.creditor_id, b.debtor_id, b.currency, b.created_at,
+    c.email AS creditor_email, COALESCE(cp.full_name, NULLIF(c.name, '')) AS creditor_name,
+    d.email AS debtor_email,  COALESCE(dp.full_name, NULLIF(d.name, '')) AS debtor_name
+  FROM debt_books b
+  JOIN "user" c ON c.id = b.creditor_id
+  JOIN "user" d ON d.id = b.debtor_id
+  LEFT JOIN profiles cp ON cp.id = b.creditor_id
+  LEFT JOIN profiles dp ON dp.id = b.debtor_id
+`;
+
 export async function getMyBooks(userId: string): Promise<DebtBook[]> {
   const db = getDB();
   const { results } = await db.prepare(`
-    SELECT b.id, b.name, b.creditor_id, b.debtor_id, b.created_at,
-      c.email AS creditor_email, c.name AS creditor_name,
-      d.email AS debtor_email,  d.name AS debtor_name
-    FROM debt_books b
-    JOIN "user" c ON c.id = b.creditor_id
-    JOIN "user" d ON d.id = b.debtor_id
+    ${BOOK_SELECT}
     WHERE b.creditor_id = ? OR b.debtor_id = ?
     ORDER BY b.created_at DESC
   `).bind(userId, userId).all<DebtBook>();
@@ -29,15 +36,7 @@ export async function getMyBooks(userId: string): Promise<DebtBook[]> {
 
 export async function getBook(bookId: string): Promise<DebtBook | null> {
   const db = getDB();
-  return db.prepare(`
-    SELECT b.id, b.name, b.creditor_id, b.debtor_id, b.created_at,
-      c.email AS creditor_email, c.name AS creditor_name,
-      d.email AS debtor_email,  d.name AS debtor_name
-    FROM debt_books b
-    JOIN "user" c ON c.id = b.creditor_id
-    JOIN "user" d ON d.id = b.debtor_id
-    WHERE b.id = ?
-  `).bind(bookId).first<DebtBook>();
+  return db.prepare(`${BOOK_SELECT} WHERE b.id = ?`).bind(bookId).first<DebtBook>();
 }
 
 export function getPartnerName(book: DebtBook, myId: string): string {

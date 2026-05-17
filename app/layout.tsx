@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import type { Metadata, Viewport } from 'next';
 import { Be_Vietnam_Pro } from 'next/font/google';
 import { Toaster } from 'sonner';
+import { ThemeProvider } from '@/components/providers/theme-provider';
 import './globals.css';
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -14,7 +15,7 @@ const beVietnamPro = Be_Vietnam_Pro({
 export const metadata: Metadata = {
   title: 'SoNo — Sổ Nợ',
   description: 'Theo dõi nợ gia đình',
-  icons: { icon: '/favicon.ico' },
+  icons: { icon: '/icon.svg' },
 };
 
 export const viewport: Viewport = {
@@ -27,8 +28,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi">
       <body className={`${beVietnamPro.variable} font-[family-name:var(--font-be-vietnam-pro)] antialiased`}>
-        {children}
-        <Toaster richColors position="top-center" />
+        <ThemeProvider>
+          {children}
+          <Toaster richColors position="top-center" />
+        </ThemeProvider>
       </body>
     </html>
   );

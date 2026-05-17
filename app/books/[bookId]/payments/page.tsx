@@ -4,7 +4,7 @@ import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { getBook } from '@/lib/queries/books';
 import { getAllPayments, getPendingPayments, getMyPayments } from '@/lib/queries/book-ledger';
 import { getPresignedUrls } from '@/lib/r2-presign';
-import { formatVND } from '@/lib/format/currency';
+import { formatAmount } from '@/lib/format/currency';
 import { formatDate } from '@/lib/format/date';
 import { PageContainer } from '@/components/shell/page-container';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -62,7 +62,7 @@ export default async function PaymentsPage({ params }: Props) {
                   {approved.map(p => (
                     <div key={p.id} className="flex items-center justify-between py-3 gap-3">
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-green-600">{formatVND(p.amount)}</p>
+                        <p className="font-semibold text-green-600">{formatAmount(p.amount, book.currency)}</p>
                         <p className="text-xs text-slate-400">{formatDate(p.created_at)}</p>
                         {p.note && <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{p.note}</p>}
                       </div>
@@ -107,7 +107,7 @@ export default async function PaymentsPage({ params }: Props) {
                     <div key={p.id} className="py-3 space-y-1">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-slate-800">{formatVND(p.amount)}</p>
+                          <p className="font-semibold text-slate-800">{formatAmount(p.amount, book.currency)}</p>
                           <p className="text-xs text-slate-400">{formatDate(p.created_at)}</p>
                           {p.note && <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{p.note}</p>}
                         </div>

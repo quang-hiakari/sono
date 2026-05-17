@@ -46,11 +46,16 @@ export function BookShell({ children, book, isCreditor }: BookShellProps) {
               {isCreditor ? 'Người nợ' : 'Người cho nợ'}: {partnerName}
             </p>
           </div>
-          <form action="/logout" method="POST">
-            <button type="submit" className="text-xs text-slate-400 hover:text-slate-700 px-2 py-1">
-              Đăng xuất
-            </button>
-          </form>
+          <div className="flex items-center gap-2">
+            <Link href="/profile" className="text-xs text-slate-400 hover:text-slate-700 px-2 py-1">
+              Hồ sơ
+            </Link>
+            <form action="/logout" method="POST">
+              <button type="submit" className="text-xs text-slate-400 hover:text-slate-700 px-2 py-1">
+                Đăng xuất
+              </button>
+            </form>
+          </div>
         </div>
       </header>
 

@@ -13,8 +13,10 @@ export async function sendOtp(email: string) {
       headers: await headers(),
     });
     return {};
-  } catch {
-    return { error: 'Không thể gửi mã. Kiểm tra lại email.' };
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[sendOtp]', msg);
+    return { error: msg.includes('Resend') ? msg : 'Không thể gửi mã. Kiểm tra lại email.' };
   }
 }
 
@@ -25,7 +27,9 @@ export async function verifyOtp(email: string, otp: string) {
       body: { email, otp },
       headers: await headers(),
     });
-  } catch {
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('[verifyOtp]', msg);
     return { error: 'Mã không đúng hoặc đã hết hạn.' };
   }
   redirect('/books');

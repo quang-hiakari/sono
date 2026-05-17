@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "pages:build": "npx @cloudflare/next-on-pages@1",
-    "preview": "pnpm pages:build && wrangler pages dev .vercel/output/static --compatibility-flag=nodejs_compat"
+    "preview": "pnpm pages:build && wrangler pages dev .vercel/output/static --compatibility-flag=nodejs_compat",
+    "deploy": "pnpm pages:build && wrangler pages deploy .vercel/output/static"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1047.0",
@@ -26,6 +27,7 @@
     "drizzle-orm": "^0.45.2",
     "lucide-react": "^0.511.0",
     "next": "15.5.18",
+    "next-themes": "^0.4.6",
     "react": "19.1.0",
     "react-dom": "19.1.0",
     "react-hook-form": "^7",

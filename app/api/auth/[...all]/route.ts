@@ -4,10 +4,5 @@ import { toNextJsHandler } from 'better-auth/next-js';
 
 export const runtime = 'edge';
 
-export function GET(req: Request) {
-  return toNextJsHandler(createAuth(getDB())).GET(req);
-}
-
-export function POST(req: Request) {
-  return toNextJsHandler(createAuth(getDB())).POST(req);
-}
+export const GET = (req: Request) => toNextJsHandler(createAuth(getDB())).GET(req);
+export const POST = (req: Request) => toNextJsHandler(createAuth(getDB())).POST(req);

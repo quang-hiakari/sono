@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageContainer } from '@/components/shell/page-container';
+import { CURRENCIES } from '@/lib/format/currency';
 import { createBook } from './actions';
 
 export default function NewBookPage() {
@@ -22,7 +23,6 @@ export default function NewBookPage() {
       toast.error(result.error);
       setLoading(false);
     }
-    // On success, server action redirects — no need to setLoading(false)
   }
 
   return (
@@ -54,6 +54,19 @@ export default function NewBookPage() {
                 />
               </div>
               <div className="space-y-1.5">
+                <Label htmlFor="currency">Đơn vị tiền tệ</Label>
+                <select
+                  id="currency"
+                  name="currency"
+                  defaultValue="VND"
+                  className="flex h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+                >
+                  {CURRENCIES.map(c => (
+                    <option key={c.code} value={c.code}>{c.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1.5">
                 <Label htmlFor="debtorEmail">Email người nợ *</Label>
                 <Input
                   id="debtorEmail"
@@ -63,7 +76,9 @@ export default function NewBookPage() {
                   placeholder="nguoi-no@email.com"
                   autoComplete="email"
                 />
-                <p className="text-xs text-slate-400">Người này phải đã có tài khoản trong SoNo.</p>
+                <p className="text-xs text-slate-400">
+                  Nếu chưa có tài khoản, SoNo sẽ tự tạo và gửi email mời họ.
+                </p>
               </div>
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Đang tạo...' : 'Tạo sổ nợ'}

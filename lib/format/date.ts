@@ -15,6 +15,9 @@ const dateTimeFormatter = new Intl.DateTimeFormat('vi-VN', {
 });
 
 export function formatDate(date: string | Date): string {
+  const s = typeof date === 'string' ? date : '';
+  const m = s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return `${m[3]}/${m[2]}/${m[1]}`;
   return dateFormatter.format(new Date(date));
 }
 

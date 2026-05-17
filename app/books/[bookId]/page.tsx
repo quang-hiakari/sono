@@ -3,12 +3,15 @@ import { Plus, Clock } from 'lucide-react';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { getBook } from '@/lib/queries/books';
 import { getLedgerTotals, getDebts, getPendingPayments, getMyPayments } from '@/lib/queries/book-ledger';
-import { formatVND } from '@/lib/format/currency';
+import { getProfile } from '@/lib/queries/profile';
+import { getPresignedUrl } from '@/lib/r2-presign';
+import { formatAmount } from '@/lib/format/currency';
 import { formatDate } from '@/lib/format/date';
 import { PageContainer } from '@/components/shell/page-container';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/states/empty-state';
+import { BankingInfoPanel } from './components/banking-info-panel';
 
 interface Props { params: Promise<{ bookId: string }> }
 
@@ -19,17 +22,26 @@ export default async function BookPage({ params }: Props) {
   if (!book) return null;
 
   const isCreditor = book.creditor_id === me!.id;
+  const fmt = (amount: number) => formatAmount(amount, book.currency);
 
-  const [totals, recentDebts] = await Promise.all([
+  const [totals, recentDebts, creditorProfile] = await Promise.all([
     getLedgerTotals(bookId),
     getDebts(bookId),
+    getProfile(book.creditor_id),
   ]);
   const debtSlice = recentDebts.slice(0, 5);
 
-  // Creditor fetches pending; debtor fetches own payments
   const pendingPayments = isCreditor ? await getPendingPayments(bookId) : [];
   const myPayments = !isCreditor ? await getMyPayments(bookId, me!.id) : [];
   const myRecentPayments = myPayments.slice(0, 3);
+
+  let qrSignedUrl: string | null = null;
+  if (creditorProfile?.bank_qr_url) {
+    qrSignedUrl = await getPresignedUrl(creditorProfile.bank_qr_url, 3600).catch(() => null);
+  }
+  const bankingProfile = creditorProfile
+    ? { ...creditorProfile, qr_signed_url: qrSignedUrl }
+    : null;
 
   return (
     <PageContainer>
@@ -40,17 +52,17 @@ export default async function BookPage({ params }: Props) {
             <div className="text-center py-2">
               <p className="text-xs text-slate-500 mb-1">Còn lại</p>
               <p className={`text-4xl font-bold ${totals.remaining > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                {formatVND(totals.remaining)}
+                {fmt(totals.remaining)}
               </p>
             </div>
             <div className="grid grid-cols-2 gap-4 pt-2 border-t border-gray-100">
               <div className="text-center">
                 <p className="text-xs text-slate-500 mb-0.5">Tổng nợ</p>
-                <p className="font-semibold text-slate-800">{formatVND(totals.total)}</p>
+                <p className="font-semibold text-slate-800">{fmt(totals.total)}</p>
               </div>
               <div className="text-center">
                 <p className="text-xs text-slate-500 mb-0.5">Đã thanh toán</p>
-                <p className="font-semibold text-green-600">{formatVND(totals.paid)}</p>
+                <p className="font-semibold text-green-600">{fmt(totals.paid)}</p>
               </div>
             </div>
             {totals.pendingCount > 0 && (
@@ -61,6 +73,9 @@ export default async function BookPage({ params }: Props) {
             )}
           </CardContent>
         </Card>
+
+        {/* Banking info panel (shown to both roles) */}
+        <BankingInfoPanel profile={bankingProfile} />
 
         {/* Creditor: pending approvals */}
         {isCreditor && pendingPayments.length > 0 && (
@@ -96,7 +111,7 @@ export default async function BookPage({ params }: Props) {
                         <p className="text-sm font-medium text-slate-800">{d.title}</p>
                         <p className="text-xs text-slate-400">{formatDate(d.debt_date)}</p>
                       </div>
-                      <p className="font-semibold text-red-600 text-sm">{formatVND(d.amount)}</p>
+                      <p className="font-semibold text-red-600 text-sm">{fmt(d.amount)}</p>
                     </div>
                   ))}
                 </div>
@@ -130,7 +145,7 @@ export default async function BookPage({ params }: Props) {
                     {myRecentPayments.map(p => (
                       <div key={p.id} className="flex items-center justify-between py-2.5">
                         <div>
-                          <p className="font-semibold text-slate-800 text-sm">{formatVND(p.amount)}</p>
+                          <p className="font-semibold text-slate-800 text-sm">{fmt(p.amount)}</p>
                           <p className="text-xs text-slate-400">{formatDate(p.created_at)}</p>
                         </div>
                         <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
