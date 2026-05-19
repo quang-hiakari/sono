@@ -53,9 +53,46 @@ export const verification = sqliteTable('verification', {
 export const profiles = sqliteTable('profiles', {
   id: text('id').primaryKey().references(() => user.id, { onDelete: 'cascade' }),
   fullName: text('full_name'),
+  country: text('country').notNull().default('VN'),
   bankName: text('bank_name'),
   accountNumber: text('account_number'),
   accountHolder: text('account_holder'),
+  branchName: text('branch_name'),
   bankQrUrl: text('bank_qr_url'),
   updatedAt: integer('updated_at', { mode: 'timestamp_ms' }),
+});
+
+export const debts = sqliteTable('debts', {
+  id: text('id').primaryKey(),
+  bookId: text('book_id').notNull(),
+  creditorId: text('creditor_id').notNull(),
+  title: text('title').notNull(),
+  amount: integer('amount').notNull(),
+  notes: text('notes'),
+  debtDate: text('debt_date').notNull(),
+  invoiceUrl: text('invoice_url'),
+  deletedAt: integer('deleted_at', { mode: 'timestamp_ms' }),
+  deleteReason: text('delete_reason'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }),
+});
+
+export const debtBooks = sqliteTable('debt_books', {
+  id: text('id').primaryKey(),
+  name: text('name').notNull(),
+  creditorId: text('creditor_id').notNull(),
+  debtorId: text('debtor_id').notNull(),
+  currency: text('currency').notNull().default('VND'),
+  debtorDisplayName: text('debtor_display_name'),
+  deletedAt: integer('deleted_at', { mode: 'timestamp_ms' }),
+  deleteReason: text('delete_reason'),
+  createdAt: integer('created_at', { mode: 'timestamp_ms' }),
+});
+
+export const banks = sqliteTable('banks', {
+  id: text('id').primaryKey(),
+  country: text('country').notNull(),
+  name: text('name').notNull(),
+  shortName: text('short_name').notNull(),
+  bin: text('bin'),
+  swift: text('swift'),
 });

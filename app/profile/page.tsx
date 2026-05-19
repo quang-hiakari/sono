@@ -1,8 +1,10 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { getProfile } from '@/lib/queries/profile';
+import { getBanksByCountry } from '@/lib/queries/banks';
 import { ProfileForm } from './profile-form';
 import { ThemeToggle } from '@/components/shell/theme-toggle';
+import { LanguageToggle } from '@/components/shell/language-toggle';
 
 export const runtime = 'edge';
 
@@ -11,6 +13,8 @@ export default async function ProfilePage() {
   if (!me) redirect('/login');
 
   const profile = await getProfile(me.id);
+  const country = profile?.country ?? 'VN';
+  const initialBanks = await getBanksByCountry(country);
 
   const displayName = profile?.full_name || me.name || '';
   const initial = (displayName[0] || me.email?.[0] || '?').toUpperCase();
@@ -23,7 +27,7 @@ export default async function ProfilePage() {
             <span className="font-black text-xl tracking-tight">SỔ</span>
             <span className="text-[#00c9a7] font-black text-xl tracking-tight">NỢ</span>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-1"><LanguageToggle /><ThemeToggle /></div>
         </div>
       </header>
 
@@ -38,7 +42,7 @@ export default async function ProfilePage() {
           </div>
         </div>
 
-        <ProfileForm profile={profile} userId={me.id} />
+        <ProfileForm profile={profile} userId={me.id} initialBanks={initialBanks} />
 
         <form action="/logout" method="POST">
           <button

@@ -3,6 +3,7 @@ export const runtime = 'edge';
 import { z } from 'zod';
 import { getDB } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
+import { sendBookDeletedNotification } from '@/lib/email/send-book-deleted-notification';
 
 const patchSchema = z.object({
   name: z.string().min(1).max(100).optional(),
@@ -37,19 +38,39 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ bookId
   return Response.json({ ok: true });
 }
 
-export async function DELETE(_req: Request, { params }: { params: Promise<{ bookId: string }> }) {
+export async function DELETE(req: Request, { params }: { params: Promise<{ bookId: string }> }) {
   const me = await getCurrentUser();
   if (!me) return Response.json({ error: 'Chưa đăng nhập.' }, { status: 401 });
 
   const { bookId } = await params;
   const db = getDB();
-  const book = await db.prepare('SELECT creditor_id FROM debt_books WHERE id = ?')
-    .bind(bookId).first<{ creditor_id: string }>();
+  const book = await db.prepare('SELECT creditor_id, debtor_id, name FROM debt_books WHERE id = ?')
+    .bind(bookId).first<{ creditor_id: string; debtor_id: string; name: string }>();
   if (!book || book.creditor_id !== me.id)
     return Response.json({ error: 'Không có quyền.' }, { status: 403 });
 
-  await db.prepare('DELETE FROM debt_books WHERE id = ? AND creditor_id = ?')
-    .bind(bookId, me.id).run();
+  const { reason } = await req.json().catch(() => ({})) as { reason?: string };
+
+  await db.prepare('UPDATE debt_books SET deleted_at = ?, delete_reason = ? WHERE id = ? AND creditor_id = ?')
+    .bind(Date.now(), reason?.trim() || null, bookId, me.id).run();
+
+  // Notify debtor (best-effort)
+  try {
+    const debtor = await db.prepare('SELECT email FROM "user" WHERE id = ?')
+      .bind(book.debtor_id).first<{ email: string }>();
+    if (debtor?.email) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
+      await sendBookDeletedNotification({
+        to: debtor.email,
+        creditorName: me.name || me.email,
+        bookName: book.name,
+        reason: reason?.trim() || null,
+        dashboardUrl: `${appUrl}/books/${bookId}`,
+      });
+    }
+  } catch (err) {
+    console.error('[deleteBook] notification failed:', err);
+  }
 
   return Response.json({ ok: true });
 }

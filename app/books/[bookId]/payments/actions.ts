@@ -6,6 +6,7 @@ import { getDB } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { sendRejectionNotification } from '@/lib/email/send-rejection-notification';
 import { sendPaymentNotification } from '@/lib/email/send-payment-notification';
+import { sendApprovalNotification } from '@/lib/email/send-approval-notification';
 import { getPresignedUrl } from '@/lib/r2-presign';
 
 const paymentSchema = z.object({
@@ -66,11 +67,36 @@ export async function approvePayment(bookId: string, paymentId: string) {
   if (!me) return { error: 'Chưa đăng nhập.' };
 
   const db = getDB();
-  const book = await db.prepare('SELECT creditor_id FROM debt_books WHERE id = ?').bind(bookId).first<{ creditor_id: string }>();
+  const book = await db.prepare('SELECT creditor_id, debtor_id, name, currency FROM debt_books WHERE id = ?')
+    .bind(bookId).first<{ creditor_id: string; debtor_id: string; name: string; currency: string }>();
   if (!book || book.creditor_id !== me.id) return { error: 'Không có quyền.' };
+
+  const payment = await db.prepare('SELECT amount FROM payments WHERE id = ? AND book_id = ?')
+    .bind(paymentId, bookId).first<{ amount: number }>();
 
   await db.prepare('UPDATE payments SET status = ?, reviewed_at = ? WHERE id = ? AND book_id = ?')
     .bind('approved', new Date().toISOString(), paymentId, bookId).run();
+
+  // Notify debtor (best-effort)
+  if (payment) {
+    try {
+      const debtor = await db.prepare('SELECT email FROM "user" WHERE id = ?')
+        .bind(book.debtor_id).first<{ email: string }>();
+      if (debtor?.email) {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
+        await sendApprovalNotification({
+          to: debtor.email,
+          creditorName: me.name || me.email,
+          bookName: book.name,
+          amount: Number(payment.amount),
+          currency: book.currency,
+          dashboardUrl: `${appUrl}/books/${bookId}/payments`,
+        });
+      }
+    } catch (err) {
+      console.error('[approvePayment] notification failed:', err);
+    }
+  }
 
   revalidateBook(bookId);
   return {};
@@ -81,7 +107,8 @@ export async function rejectPayment(bookId: string, paymentId: string, reason: s
   if (!me) return { error: 'Chưa đăng nhập.' };
 
   const db = getDB();
-  const book = await db.prepare('SELECT creditor_id FROM debt_books WHERE id = ?').bind(bookId).first<{ creditor_id: string }>();
+  const book = await db.prepare('SELECT creditor_id, name, currency FROM debt_books WHERE id = ?')
+    .bind(bookId).first<{ creditor_id: string; name: string; currency: string }>();
   if (!book || book.creditor_id !== me.id) return { error: 'Không có quyền.' };
 
   const payment = await db.prepare('SELECT amount, debtor_id FROM payments WHERE id = ? AND book_id = ?')
@@ -100,6 +127,7 @@ export async function rejectPayment(bookId: string, paymentId: string, reason: s
           to: debtor.email,
           creditorName: me.name || me.email,
           amount: Number(payment.amount),
+          currency: book.currency,
           reason: reason.trim() || null,
           dashboardUrl: `${appUrl}/books/${bookId}/payments`,
         });

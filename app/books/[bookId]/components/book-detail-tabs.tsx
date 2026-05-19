@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Plus, PlusCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 import { formatAmount } from '@/lib/format/currency';
 import { formatDate } from '@/lib/format/date';
 import type { Debt, Payment } from '@/lib/queries/book-ledger';
@@ -22,6 +23,9 @@ interface Props {
 
 export function BookDetailTabs({ bookId, currency, isCreditor, debts, payments }: Props) {
   const [tab, setTab] = useState<'debts' | 'payments'>('debts');
+  const t = useTranslations('book');
+  const tp = useTranslations('payment');
+  const td = useTranslations('debt');
   const fmt = (n: number) => formatAmount(n, currency);
 
   const approvedPayments = isCreditor ? payments.filter(p => p.status === 'approved') : payments;
@@ -31,8 +35,8 @@ export function BookDetailTabs({ bookId, currency, isCreditor, debts, payments }
       {/* Tab bar */}
       <div className="flex rounded-xl bg-slate-100 dark:bg-white/[0.05] p-1 gap-1 mb-4">
         {[
-          { id: 'debts' as const, label: 'Khoản nợ', count: debts.length },
-          { id: 'payments' as const, label: 'Thanh Toán', count: approvedPayments.length },
+          { id: 'debts' as const, label: t('tabs.debts'), count: debts.length },
+          { id: 'payments' as const, label: t('tabs.payments'), count: approvedPayments.length },
         ].map(t => (
           <button key={t.id} onClick={() => setTab(t.id)}
             className={cn(
@@ -60,7 +64,7 @@ export function BookDetailTabs({ bookId, currency, isCreditor, debts, payments }
           {isCreditor && (
             <Link href={`/books/${bookId}/debts/new?currency=${currency}`}
               className="flex items-center justify-center gap-1.5 w-full bg-[#00c9a7] hover:bg-[#00b498] text-[#0d0d0f] font-bold text-sm py-3 rounded-xl transition-colors">
-              <Plus size={15} /> Thêm khoản nợ mới
+              <Plus size={15} /> {td('addBtn')}
             </Link>
           )}
           <DebtsList debts={debts} bookId={bookId} isCreditor={isCreditor} currency={currency} />
@@ -73,11 +77,11 @@ export function BookDetailTabs({ bookId, currency, isCreditor, debts, payments }
           {!isCreditor && (
             <Link href={`/books/${bookId}/payments/new`}
               className="flex items-center justify-center gap-2 w-full h-12 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700">
-              <PlusCircle size={18} /> Trả nợ mới
+              <PlusCircle size={18} /> {tp('new')}
             </Link>
           )}
           {approvedPayments.length === 0 ? (
-            <EmptyState message={isCreditor ? 'Chưa có thanh toán được duyệt.' : 'Bạn chưa có lịch sử thanh toán.'} />
+            <EmptyState message={isCreditor ? tp('emptyApproved') : tp('empty')} />
           ) : (
             <div className="divide-y divide-gray-100 dark:divide-white/[0.06]">
               {approvedPayments.map(p => (

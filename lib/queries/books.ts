@@ -11,10 +11,13 @@ export interface DebtBook {
   debtor_email: string;
   debtor_name: string;
   created_at: string;
+  deleted_at: number | null;
+  delete_reason: string | null;
 }
 
 const BOOK_SELECT = `
   SELECT b.id, b.name, b.creditor_id, b.debtor_id, b.currency, b.created_at,
+    b.deleted_at, b.delete_reason,
     c.email AS creditor_email, COALESCE(cp.full_name, NULLIF(c.name, '')) AS creditor_name,
     d.email AS debtor_email,
     COALESCE(b.debtor_display_name, dp.full_name, NULLIF(d.name, '')) AS debtor_name

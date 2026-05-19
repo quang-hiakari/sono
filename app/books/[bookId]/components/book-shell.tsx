@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { Home, CheckCircle, PlusCircle, ArrowLeft } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { cn } from '@/lib/utils';
-import { DebtBook } from '@/lib/queries/books';
+import type { DebtBook } from '@/lib/queries/books';
 
 interface BookShellProps {
   children: React.ReactNode;
@@ -15,18 +16,21 @@ interface BookShellProps {
 
 export function BookShell({ children, book, isCreditor }: BookShellProps) {
   const pathname = usePathname();
+  const t = useTranslations('book');
+  const tc = useTranslations('common');
+  const tn = useTranslations('nav');
   const bookId = book.id;
   const partnerName = isCreditor
     ? (book.debtor_name || book.debtor_email)
     : (book.creditor_name || book.creditor_email);
 
   const creditorLinks = [
-    { href: `/books/${bookId}`, label: 'Tổng quan', icon: Home },
-    { href: `/books/${bookId}/payments`, label: 'Phê duyệt', icon: CheckCircle },
+    { href: `/books/${bookId}`, label: t('overview'), icon: Home },
+    { href: `/books/${bookId}/payments`, label: t('tabs.payments'), icon: CheckCircle },
   ];
   const debtorLinks = [
-    { href: `/books/${bookId}`, label: 'Tổng quan', icon: Home },
-    { href: `/books/${bookId}/payments/new`, label: 'Trả nợ', icon: PlusCircle },
+    { href: `/books/${bookId}`, label: t('overview'), icon: Home },
+    { href: `/books/${bookId}/payments/new`, label: t('tabs.payments'), icon: PlusCircle },
   ];
   const links = isCreditor ? creditorLinks : debtorLinks;
 
@@ -41,17 +45,17 @@ export function BookShell({ children, book, isCreditor }: BookShellProps) {
           <div className="flex-1 min-w-0">
             <p className="font-semibold text-slate-800 truncate text-sm">{book.name}</p>
             <p className="text-xs text-slate-400 truncate">
-              {isCreditor ? 'Người nợ' : 'Người cho nợ'}: {partnerName}
+              {isCreditor ? t('debtor') : t('creditor')}: {partnerName}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <Link href="/profile" className="text-xs text-slate-400 hover:text-slate-700 px-2 py-1">
-              Hồ sơ
+              {tn('profile')}
             </Link>
             <form action="/logout" method="POST">
               <button type="submit" className="text-xs text-red-400 hover:text-red-600 px-2 py-1 flex items-center gap-1">
                 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-                Đăng xuất
+                {tc('logout')}
               </button>
             </form>
           </div>

@@ -2,11 +2,15 @@
 
 import { useState, useRef } from 'react';
 import { toast } from 'sonner';
+import { useTranslations } from 'next-intl';
 import { UserProfile } from '@/lib/queries/profile';
+import { Bank } from '@/lib/queries/banks';
+import { BankSelect } from '@/components/ui/bank-select';
 
 interface ProfileFormProps {
   profile: UserProfile | null;
   userId: string;
+  initialBanks: Bank[];
 }
 
 function FormSection({ title, children }: { title: string; children: React.ReactNode }) {
@@ -42,14 +46,37 @@ function FormInput({ id, name, defaultValue, placeholder, maxLength, inputMode, 
   );
 }
 
-export function ProfileForm({ profile, userId }: ProfileFormProps) {
+const COUNTRIES = [
+  { code: 'VN', labelKey: 'countryVN' as const },
+  { code: 'JP', labelKey: 'countryJP' as const },
+] as const;
+
+export function ProfileForm({ profile, userId, initialBanks }: ProfileFormProps) {
+  const t = useTranslations('profile');
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [qrBust, setQrBust] = useState(0);
+  const [country, setCountry] = useState(profile?.country ?? 'VN');
+  const [banks, setBanks] = useState<Bank[]>(initialBanks);
+  const [bankName, setBankName] = useState(profile?.bank_name ?? '');
+  const [branchName, setBranchName] = useState(profile?.branch_name ?? '');
   const fileRef = useRef<HTMLInputElement>(null);
 
   const hasQr = !!profile?.bank_qr_url;
   const qrUrl = hasQr || qrBust > 0 ? `/api/qr/${userId}?t=${qrBust}` : null;
+
+  async function handleCountryChange(newCountry: string) {
+    setCountry(newCountry);
+    setBankName('');
+    setBranchName('');
+    try {
+      const res = await fetch(`/api/banks?country=${newCountry}`);
+      const data = await res.json() as { banks: Bank[] };
+      setBanks(data.banks);
+    } catch {
+      // keep existing bank list on error
+    }
+  }
 
   async function handleSave(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -60,7 +87,9 @@ export function ProfileForm({ profile, userId }: ProfileFormProps) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         full_name: fd.get('full_name') || undefined,
-        bank_name: fd.get('bank_name') || undefined,
+        country,
+        bank_name: bankName || undefined,
+        branch_name: branchName || undefined,
         account_number: fd.get('account_number') || undefined,
         account_holder: fd.get('account_holder') || undefined,
       }),
@@ -68,7 +97,7 @@ export function ProfileForm({ profile, userId }: ProfileFormProps) {
     setSaving(false);
     const result = await res.json().catch(() => ({})) as { error?: string };
     if (result.error) toast.error(result.error);
-    else toast.success('Đã lưu thông tin.');
+    else toast.success(t('saveSuccess'));
   }
 
   async function handleQrUpload(e: React.ChangeEvent<HTMLInputElement>) {
@@ -85,38 +114,72 @@ export function ProfileForm({ profile, userId }: ProfileFormProps) {
     if (result.error) toast.error(result.error);
     else {
       setQrBust(Date.now());
-      toast.success('Đã tải ảnh QR.');
+      toast.success(t('qrUploadSuccess'));
     }
   }
 
   return (
     <div className="space-y-4">
       <form onSubmit={handleSave} className="space-y-4">
-        <FormSection title="Thông tin cá nhân">
-          <FormField label="Tên hiển thị" htmlFor="full_name">
-            <FormInput id="full_name" name="full_name" defaultValue={profile?.full_name ?? ''} placeholder="Tên của bạn" maxLength={80} />
+        <FormSection title={t('personalInfo')}>
+          <FormField label={t('displayName')} htmlFor="full_name">
+            <FormInput id="full_name" name="full_name" defaultValue={profile?.full_name ?? ''} placeholder={t('displayNamePlaceholder')} maxLength={80} />
           </FormField>
+          <div className="space-y-1.5">
+            <p className="text-xs font-medium text-slate-500 dark:text-white/45">{t('country')}</p>
+            <div className="flex gap-2">
+              {COUNTRIES.map(({ code, labelKey }) => (
+                <button
+                  key={code}
+                  type="button"
+                  onClick={() => handleCountryChange(code)}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold border transition-colors ${
+                    country === code
+                      ? 'bg-[#00c9a7] border-[#00c9a7] text-[#0d0d0f]'
+                      : 'bg-slate-50 dark:bg-white/[0.05] border-slate-200 dark:border-white/[0.08] text-slate-500 dark:text-white/45 hover:border-slate-300 dark:hover:border-white/15'
+                  }`}
+                >
+                  {t(labelKey)}
+                </button>
+              ))}
+            </div>
+          </div>
         </FormSection>
 
-        <FormSection title="Thông tin ngân hàng">
-          <FormField label="Tên ngân hàng" htmlFor="bank_name">
-            <FormInput id="bank_name" name="bank_name" defaultValue={profile?.bank_name ?? ''} placeholder="Vietcombank, MB Bank..." />
+        <FormSection title={t('bank')}>
+          <FormField label={t('bankName')} htmlFor="bank_name">
+            <BankSelect
+              banks={banks}
+              value={bankName}
+              onChange={setBankName}
+              placeholder={t('selectBank')}
+            />
           </FormField>
-          <FormField label="Số tài khoản" htmlFor="account_number">
-            <FormInput id="account_number" name="account_number" defaultValue={profile?.account_number ?? ''} placeholder="0123456789" inputMode="numeric" />
+          <FormField label={t('branchName')} htmlFor="branch_name">
+            <input
+              id="branch_name"
+              value={branchName}
+              onChange={e => setBranchName(e.target.value)}
+              placeholder={t('branchNamePlaceholder')}
+              maxLength={100}
+              className="w-full bg-slate-50 dark:bg-white/[0.05] border border-slate-200 dark:border-white/[0.08] rounded-xl px-4 py-3 text-sm text-slate-900 dark:text-white placeholder:text-slate-400 dark:placeholder:text-white/20 focus:outline-none focus:border-[#00c9a7]/60 dark:focus:border-[#00c9a7]/50 focus:bg-white dark:focus:bg-white/[0.07] transition-colors"
+            />
           </FormField>
-          <FormField label="Tên chủ tài khoản" htmlFor="account_holder">
-            <FormInput id="account_holder" name="account_holder" defaultValue={profile?.account_holder ?? ''} placeholder="NGUYEN VAN A" className="uppercase" />
+          <FormField label={t('accountNumber')} htmlFor="account_number">
+            <FormInput id="account_number" name="account_number" defaultValue={profile?.account_number ?? ''} placeholder={t('accountNumberPlaceholder')} inputMode="numeric" />
+          </FormField>
+          <FormField label={t('accountHolder')} htmlFor="account_holder">
+            <FormInput id="account_holder" name="account_holder" defaultValue={profile?.account_holder ?? ''} placeholder={t('accountHolderPlaceholder')} className="uppercase" />
           </FormField>
         </FormSection>
 
         <button type="submit" disabled={saving}
           className="w-full bg-[#00c9a7] hover:bg-[#00b498] disabled:opacity-50 text-[#0d0d0f] font-bold py-3.5 rounded-2xl text-sm transition-colors">
-          {saving ? 'Đang lưu...' : 'Lưu thông tin'}
+          {saving ? t('saving') : t('save')}
         </button>
       </form>
 
-      <FormSection title="Mã QR chuyển khoản">
+      <FormSection title={t('qr')}>
         {qrUrl && (
           <div className="flex justify-center py-2">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -126,9 +189,9 @@ export function ProfileForm({ profile, userId }: ProfileFormProps) {
         <input ref={fileRef} type="file" accept="image/*" onChange={handleQrUpload} className="hidden" />
         <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
           className="w-full py-3 rounded-xl border border-slate-200 dark:border-white/[0.08] text-slate-400 dark:text-white/45 text-sm font-medium hover:text-slate-600 dark:hover:text-white/65 hover:border-slate-300 dark:hover:border-white/15 disabled:opacity-50 transition-colors">
-          {uploading ? 'Đang tải...' : qrUrl ? 'Đổi ảnh QR' : 'Tải ảnh QR lên'}
+          {uploading ? t('uploading') : qrUrl ? t('changeQr') : t('uploadQr')}
         </button>
-        <p className="text-xs text-slate-400 dark:text-white/25 text-center">Ảnh QR từ app ngân hàng của bạn (tối đa 3MB)</p>
+        <p className="text-xs text-slate-400 dark:text-white/25 text-center">{t('qrHint')}</p>
       </FormSection>
     </div>
   );

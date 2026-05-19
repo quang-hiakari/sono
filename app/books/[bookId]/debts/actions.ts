@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { getDB } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
+import { sendDebtNotification } from '@/lib/email/send-debt-notification';
 
 const debtSchema = z.object({
   title: z.string().min(1).max(120),
@@ -40,6 +41,31 @@ export async function createDebt(bookId: string, formData: FormData) {
     'INSERT INTO debts (id, book_id, creditor_id, title, amount, notes, debt_date) VALUES (?, ?, ?, ?, ?, ?, ?)'
   ).bind(crypto.randomUUID(), bookId, ctx.me.id, title, amount, notes ?? null, date).run();
 
+  // Notify debtor (best-effort)
+  try {
+    const book = await ctx.db.prepare('SELECT debtor_id, name, currency FROM debt_books WHERE id = ?')
+      .bind(bookId).first<{ debtor_id: string; name: string; currency: string }>();
+    if (book) {
+      const debtor = await ctx.db.prepare('SELECT email FROM "user" WHERE id = ?')
+        .bind(book.debtor_id).first<{ email: string }>();
+      if (debtor?.email) {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
+        await sendDebtNotification({
+          to: debtor.email,
+          creditorName: ctx.me.name || ctx.me.email,
+          bookName: book.name,
+          title,
+          amount,
+          currency: book.currency,
+          debtDate: date,
+          dashboardUrl: `${appUrl}/books/${bookId}`,
+        });
+      }
+    }
+  } catch (err) {
+    console.error('[createDebt] notification failed:', err);
+  }
+
   revalidateBook(bookId);
   return {};
 }
@@ -58,11 +84,12 @@ export async function createDebtFormAction(
   return createDebt(bookId, formData);
 }
 
-export async function deleteDebt(bookId: string, debtId: string) {
+export async function deleteDebt(bookId: string, debtId: string, reason?: string) {
   const ctx = await verifyCreditor(bookId);
   if (!ctx) return { error: 'Không có quyền.' };
 
-  await ctx.db.prepare('DELETE FROM debts WHERE id = ? AND book_id = ?').bind(debtId, bookId).run();
+  await ctx.db.prepare('UPDATE debts SET deleted_at = ?, delete_reason = ? WHERE id = ? AND book_id = ?')
+    .bind(Date.now(), reason?.trim() || null, debtId, bookId).run();
 
   revalidateBook(bookId);
   return {};

@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { getDB } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { revalidatePath } from 'next/cache';
+import { sendDebtDeletedNotification } from '@/lib/email/send-debt-deleted-notification';
 
 const schema = z.object({
   title: z.string().min(1).max(120),
@@ -46,15 +47,42 @@ export async function DELETE(req: Request, { params }: { params: Promise<{ bookI
 
   const { bookId } = await params;
   const db = getDB();
-  const book = await db.prepare('SELECT creditor_id FROM debt_books WHERE id = ?')
-    .bind(bookId).first<{ creditor_id: string }>();
+  const book = await db.prepare('SELECT creditor_id, debtor_id, name, currency FROM debt_books WHERE id = ?')
+    .bind(bookId).first<{ creditor_id: string; debtor_id: string; name: string; currency: string }>();
   if (!book || book.creditor_id !== me.id)
     return Response.json({ error: 'Không có quyền.' }, { status: 403 });
 
-  const { debtId } = await req.json() as { debtId: string };
+  const { debtId, reason } = await req.json() as { debtId: string; reason?: string };
   if (!debtId) return Response.json({ error: 'Thiếu debtId.' }, { status: 400 });
 
-  await db.prepare('DELETE FROM debts WHERE id = ? AND book_id = ?').bind(debtId, bookId).run();
+  const debt = await db.prepare('SELECT title, amount FROM debts WHERE id = ? AND book_id = ?')
+    .bind(debtId, bookId).first<{ title: string; amount: number }>();
+
+  await db.prepare('UPDATE debts SET deleted_at = ?, delete_reason = ? WHERE id = ? AND book_id = ?')
+    .bind(Date.now(), reason?.trim() || null, debtId, bookId).run();
+
+  // Notify debtor (best-effort)
+  if (debt) {
+    try {
+      const debtor = await db.prepare('SELECT email FROM "user" WHERE id = ?')
+        .bind(book.debtor_id).first<{ email: string }>();
+      if (debtor?.email) {
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
+        await sendDebtDeletedNotification({
+          to: debtor.email,
+          creditorName: me.name || me.email,
+          bookName: book.name,
+          debtTitle: debt.title,
+          amount: Number(debt.amount),
+          currency: book.currency,
+          reason: reason?.trim() || null,
+          dashboardUrl: `${appUrl}/books/${bookId}`,
+        });
+      }
+    } catch (err) {
+      console.error('[deleteDebt] notification failed:', err);
+    }
+  }
 
   revalidatePath(`/books/${bookId}`);
   revalidatePath(`/books/${bookId}/debts`);

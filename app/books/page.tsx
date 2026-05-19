@@ -4,6 +4,7 @@ import { Plus, BookOpen } from 'lucide-react';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { getMyBooks } from '@/lib/queries/books';
 import { ThemeToggle } from '@/components/shell/theme-toggle';
+import { LanguageToggle } from '@/components/shell/language-toggle';
 import { BooksTabs } from './components/books-tabs';
 
 export default async function BooksPage() {
@@ -11,6 +12,7 @@ export default async function BooksPage() {
   const books = await getMyBooks(me!.id);
   const creditorBooks = books.filter(b => b.creditor_id === me!.id);
   const debtorBooks = books.filter(b => b.debtor_id === me!.id);
+  const hasNoBooks = books.length === 0;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0d0d0f] text-slate-900 dark:text-white">
@@ -20,12 +22,12 @@ export default async function BooksPage() {
             <span className="font-black text-xl tracking-tight">SỔ</span>
             <span className="text-[#00c9a7] font-black text-xl tracking-tight">NỢ</span>
           </div>
-          <ThemeToggle />
+          <div className="flex items-center gap-1"><LanguageToggle /><ThemeToggle /></div>
         </div>
       </header>
 
       <main className="max-w-3xl mx-auto px-4 py-6 pb-28">
-        {books.length === 0 ? (
+        {hasNoBooks ? (
           <div className="flex flex-col items-center justify-center py-24 gap-4">
             <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-white/[0.04] flex items-center justify-center">
               <BookOpen size={28} className="text-slate-300 dark:text-white/25" />

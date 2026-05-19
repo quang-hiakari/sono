@@ -11,7 +11,9 @@ export async function updateProfile(formData: FormData) {
 
   await upsertProfile(me.id, {
     full_name: (formData.get('full_name') as string)?.trim() || null,
+    country: (formData.get('country') as string) || 'VN',
     bank_name: (formData.get('bank_name') as string)?.trim() || null,
+    branch_name: (formData.get('branch_name') as string)?.trim() || null,
     account_number: (formData.get('account_number') as string)?.trim() || null,
     account_holder: (formData.get('account_holder') as string)?.trim() || null,
   });

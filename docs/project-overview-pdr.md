@@ -1,9 +1,9 @@
 # SoNo: Project Overview & Product Development Requirements
 
 **Project Name:** SoNo (Sổ Nợ - Debt Ledger)  
-**Version:** 2.0 (Multi-user Debt Books)  
+**Version:** 2.1 (Multi-user Debt Books + Country/Bank Profiles)  
 **Status:** Implemented  
-**Last Updated:** 2026-05-16
+**Last Updated:** 2026-05-18
 
 ## Executive Summary
 
@@ -155,6 +155,27 @@ Enable flexible, transparent debt tracking between family members, friends, and 
 - Middleware: `middleware.ts` refreshes session
 - Current User: `lib/auth/get-current-user.ts`
 - RLS: All queries filtered by `auth.uid()`
+
+### 7. Country-Specific Bank Profiles
+
+**Requirement:** Users can specify their country (Vietnam/Japan) and select from a curated list of country-specific banks for account details.
+
+**Acceptance Criteria:**
+- User navigates to `/profile`
+- Country selector: toggle between "Vietnam" and "Japan"
+- Bank field replaced with searchable dropdown showing 30 Vietnamese or 20 Japanese banks
+- Bank list filters dynamically when country changes
+- Bank ID stored in database; UI displays bank short name (e.g., "Vietcombank", "MUFG")
+- Profile persists country and bank selection
+- All text (country, bank labels, placeholders) supports i18n (English, Vietnamese, Japanese)
+
+**Technical Details:**
+- `profiles.country` column: TEXT, default 'VN'
+- `banks` reference table: `{id, country, name, short_name, bin, swift}`
+- Bank query: `getBanksByCountry(country: 'VN' | 'JP')` returns sorted list
+- UI Component: `BankSelect` with search + modal overlay (mobile-optimized)
+- API route: `GET /api/banks?country=VN|JP` for dynamic list refresh
+- i18n keys: country, countryVN, countryJP, selectBank, bankSearch, bankNotFound, bankNamePlaceholder
 
 ## Non-Functional Requirements
 

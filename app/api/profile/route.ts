@@ -6,7 +6,9 @@ import { upsertProfile } from '@/lib/queries/profile';
 
 const schema = z.object({
   full_name: z.string().max(80).optional(),
+  country: z.enum(['VN', 'JP']).optional(),
   bank_name: z.string().max(100).optional(),
+  branch_name: z.string().max(100).optional(),
   account_number: z.string().max(30).optional(),
   account_holder: z.string().max(100).optional(),
 });

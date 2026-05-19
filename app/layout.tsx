@@ -4,6 +4,7 @@ import type { Metadata, Viewport } from 'next';
 import { Be_Vietnam_Pro } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { ThemeProvider } from '@/components/providers/theme-provider';
+import { LocaleProvider } from '@/components/providers/locale-provider';
 import './globals.css';
 
 const beVietnamPro = Be_Vietnam_Pro({
@@ -28,10 +29,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="vi">
       <body className={`${beVietnamPro.variable} font-[family-name:var(--font-be-vietnam-pro)] antialiased`}>
-        <ThemeProvider>
-          {children}
-          <Toaster richColors position="top-center" />
-        </ThemeProvider>
+        <LocaleProvider>
+          <ThemeProvider>
+            {children}
+            <Toaster richColors position="top-center" />
+          </ThemeProvider>
+        </LocaleProvider>
       </body>
     </html>
   );

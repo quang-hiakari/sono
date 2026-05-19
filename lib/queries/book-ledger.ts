@@ -16,6 +16,8 @@ export interface Debt {
   invoice_url: string | null;
   debt_date: string;
   created_at: string;
+  deleted_at: number | null;
+  delete_reason: string | null;
 }
 
 export interface Payment {
@@ -34,7 +36,7 @@ export interface Payment {
 export async function getLedgerTotals(bookId: string): Promise<LedgerTotals> {
   const db = getDB();
   const [dRow, pRow, cntRow] = await Promise.all([
-    db.prepare('SELECT SUM(amount) AS total FROM debts WHERE book_id = ?').bind(bookId).first<{ total: number | null }>(),
+    db.prepare('SELECT SUM(amount) AS total FROM debts WHERE book_id = ? AND deleted_at IS NULL').bind(bookId).first<{ total: number | null }>(),
     db.prepare('SELECT SUM(amount) AS total FROM payments WHERE book_id = ? AND status = ?').bind(bookId, 'approved').first<{ total: number | null }>(),
     db.prepare('SELECT COUNT(*) AS cnt FROM payments WHERE book_id = ? AND status = ?').bind(bookId, 'pending').first<{ cnt: number }>(),
   ]);
@@ -46,7 +48,7 @@ export async function getLedgerTotals(bookId: string): Promise<LedgerTotals> {
 export async function getDebts(bookId: string): Promise<Debt[]> {
   const db = getDB();
   const { results } = await db.prepare(
-    'SELECT id, book_id, title, amount, notes, NULL as invoice_url, debt_date, created_at FROM debts WHERE book_id = ? ORDER BY created_at DESC'
+    'SELECT id, book_id, title, amount, notes, invoice_url, debt_date, created_at, deleted_at, delete_reason FROM debts WHERE book_id = ? ORDER BY deleted_at ASC, created_at DESC'
   ).bind(bookId).all<Debt>();
   return results;
 }

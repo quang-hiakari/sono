@@ -1,7 +1,7 @@
 # SoNo Codebase Summary
 
-**Version:** 2.0 (Multi-user Debt Books)  
-**Last Updated:** 2026-05-16  
+**Version:** 2.1 (Multi-user Debt Books + Country/Bank Profiles)  
+**Last Updated:** 2026-05-18  
 **Tech Stack:** Next.js 15.5, React 19, TypeScript, Supabase (PostgreSQL), Tailwind CSS
 
 ## Overview
@@ -16,7 +16,8 @@ SoNo is a collaborative debt tracking application enabling any two users to crea
 
 | Table | Purpose | Key Fields |
 |-------|---------|-----------|
-| `profiles` | User profiles (no global roles) | id, email, full_name, created_at |
+| `profiles` | User profiles (no global roles) | id, email, full_name, country (VN/JP), bank_name, account_number, account_holder, bank_qr_url, created_at |
+| `banks` | Reference data for country-specific banks | id (bank code), country (VN/JP), name, short_name, bin (VN only), swift (JP only) |
 | `debt_books` | Named debt containers between two users | id, name, creditor_id, debtor_id, created_at |
 | `debts` | Individual debts within a book | id, book_id, creditor_id, title, amount, debt_date |
 | `payments` | Payments with approval workflow | id, book_id, debtor_id, amount, receipt_url, status (pending/approved/rejected), rejection_reason, reviewed_at |
@@ -124,12 +125,20 @@ app/
 │   └── actions.ts            → signIn server action
 ├── logout/
 │   └── route.ts
+├── profile/
+│   ├── page.tsx              → User profile with country/bank selector
+│   ├── profile-form.tsx      → Country toggle + BankSelect dropdown
+│   └── actions.ts            → updateProfile with country
 ├── layout.tsx                → Root layout
 ├── page.tsx                  → Redirect handler
 ├── error.tsx
 ├── loading.tsx
 ├── not-found.tsx
 └── api/
+    ├── banks/
+    │   └── route.ts          → GET /api/banks?country=VN|JP
+    ├── profile/
+    │   └── route.ts          → PATCH /api/profile (country, bank updates)
     └── webhooks/
         └── payment-created/
             └── route.ts      → Email on payment submission
@@ -139,6 +148,8 @@ lib/
 │   └── get-current-user.ts   → Current auth user + profile
 ├── queries/
 │   ├── books.ts              → getMyBooks, getBook, getPartnerName
+│   ├── banks.ts              → getBanksByCountry (VN/JP)
+│   ├── profile.ts            → getProfile, upsertProfile (with country)
 │   └── book-ledger.ts        → Totals, debts, payments (all/pending/mine)
 ├── email/
 │   ├── send-payment-notification.ts   → Creditor notification
@@ -158,7 +169,9 @@ lib/
 └── utils.ts                  → Utilities
 
 components/
-├── ui/                       → Radix + Tailwind components
+├── ui/
+│   ├── bank-select.tsx       → Searchable bank dropdown with modal overlay
+│   └── ...                   → Radix + Tailwind components
 ├── shell/
 │   └── page-container.tsx
 └── ...

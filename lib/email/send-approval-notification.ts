@@ -1,18 +1,11 @@
 import { Resend } from 'resend';
 import { formatAmount } from '@/lib/format/currency';
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+import { buildEmailHtml, escapeHtml } from './email-html-template';
 
 interface ApprovalParams {
   to: string;
   creditorName: string;
+  bookName: string;
   amount: number;
   currency: string;
   dashboardUrl: string;
@@ -21,20 +14,25 @@ interface ApprovalParams {
 export async function sendApprovalNotification(p: ApprovalParams) {
   const resend = new Resend(process.env.RESEND_API_KEY);
   const fmt = formatAmount(p.amount, p.currency);
+
+  const content = `
+    <p style="color:#555;font-size:15px;margin:0 0 16px">
+      Thanh toán của bạn trong sổ <strong>${escapeHtml(p.bookName)}</strong> đã được
+      <strong>${escapeHtml(p.creditorName)}</strong> duyệt thành công.
+    </p>
+    <div style="background:#f0fdf4;border-radius:8px;padding:16px;margin:0 0 8px">
+      <p style="margin:0;font-size:13px;color:#16a34a;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Đã duyệt</p>
+      <p style="margin:6px 0 0;font-size:22px;font-weight:700;color:#111">${fmt}</p>
+    </div>`;
+
   await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
     to: p.to,
     subject: `SoNo — Thanh toán ${fmt} đã được duyệt`,
-    html: `
-      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-        <h2 style="color: #16a34a; margin-bottom: 16px;">Thanh toán được duyệt</h2>
-        <p>Thanh toán <strong>${fmt}</strong> của bạn đã được <strong>${escapeHtml(p.creditorName)}</strong> duyệt thành công.</p>
-        <p style="margin-top: 24px;">
-          <a href="${p.dashboardUrl}" style="background: #1e40af; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none;">
-            Xem lịch sử thanh toán
-          </a>
-        </p>
-      </div>
-    `,
+    html: buildEmailHtml({
+      content,
+      ctaLabel: 'Xem lịch sử thanh toán',
+      ctaUrl: p.dashboardUrl,
+    }),
   });
 }

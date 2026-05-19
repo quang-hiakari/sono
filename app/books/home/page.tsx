@@ -7,6 +7,8 @@ import { getPendingApprovals, getRecentDebts } from '@/lib/queries/notifications
 import { formatAmount } from '@/lib/format/currency';
 import { formatDate } from '@/lib/format/date';
 import { ThemeToggle } from '@/components/shell/theme-toggle';
+import { getT } from '@/lib/i18n';
+import { LanguageToggle } from '@/components/shell/language-toggle';
 
 export default async function HomePage() {
   const me = await getCurrentUser();
@@ -16,6 +18,7 @@ export default async function HomePage() {
     getProfile(me!.id),
   ]);
   const displayName = profile?.full_name || me!.name || me!.email;
+  const t = await getT('home');
 
   const hasNotifications = pendingApprovals.length > 0 || recentDebts.length > 0;
 
@@ -28,7 +31,7 @@ export default async function HomePage() {
             <span className="text-[#00c9a7] font-black text-xl tracking-tight">NỢ</span>
           </div>
           <div className="flex items-center gap-1">
-            <ThemeToggle />
+            <LanguageToggle /><ThemeToggle />
             <div className="relative p-1.5">
               <Bell size={18} className="text-slate-400 dark:text-white/40" strokeWidth={1.5} />
               {hasNotifications && (
@@ -42,7 +45,7 @@ export default async function HomePage() {
       <main className="max-w-3xl mx-auto px-4 py-6 pb-28 space-y-8">
         {/* Greeting */}
         <div>
-          <p className="text-slate-500 dark:text-white/40 text-sm">Xin chào,</p>
+          <p className="text-slate-500 dark:text-white/40 text-sm">{t('greeting')}</p>
           <p className="text-slate-900 dark:text-white font-bold text-xl">{displayName}</p>
         </div>
 
@@ -51,7 +54,7 @@ export default async function HomePage() {
             <div className="w-16 h-16 rounded-2xl bg-slate-100 dark:bg-white/[0.04] flex items-center justify-center">
               <CheckCircle size={28} className="text-slate-300 dark:text-white/20" />
             </div>
-            <p className="text-slate-400 dark:text-white/40 text-sm">Không có thông báo mới</p>
+            <p className="text-slate-400 dark:text-white/40 text-sm">{t('noNotifications')}</p>
           </div>
         )}
 
@@ -60,13 +63,13 @@ export default async function HomePage() {
           <section className="space-y-3">
             <div className="flex items-center gap-2">
               <h2 className="text-[11px] font-semibold text-slate-400 dark:text-white/30 uppercase tracking-widest">
-                Cần duyệt
+                {t('needApprove')}
               </h2>
               <span className="text-[11px] bg-[#00c9a7]/15 text-[#00a88a] dark:text-[#00c9a7] px-2 py-0.5 rounded-full font-semibold">
                 {pendingApprovals.length}
               </span>
             </div>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-3">
               {pendingApprovals.map(n => (
                 <Link key={n.book_id} href={`/books/${n.book_id}/payments`}>
                   <div className="flex items-start gap-3 bg-white dark:bg-[#18181f] rounded-2xl px-4 py-3.5 border border-[#00c9a7]/20 dark:border-[#00c9a7]/10 hover:border-[#00c9a7]/40 dark:hover:border-[#00c9a7]/25 transition-colors shadow-sm dark:shadow-none">
@@ -76,11 +79,11 @@ export default async function HomePage() {
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{n.book_name}</p>
                       <p className="text-xs text-slate-500 dark:text-white/45 mt-0.5">
-                        {n.debtor_name || n.debtor_email} gửi {n.payment_count} thanh toán chờ duyệt
+                        {t('paymentsWaiting', { name: n.debtor_name || n.debtor_email, count: String(n.payment_count) })}
                       </p>
                     </div>
                     <span className="shrink-0 text-[11px] bg-yellow-500/15 text-yellow-600 dark:text-yellow-400 px-2.5 py-1 rounded-full font-semibold">
-                      {n.payment_count} chờ
+                      {n.payment_count}
                     </span>
                   </div>
                 </Link>
@@ -93,9 +96,9 @@ export default async function HomePage() {
         {recentDebts.length > 0 && (
           <section className="space-y-3">
             <h2 className="text-[11px] font-semibold text-slate-400 dark:text-white/30 uppercase tracking-widest">
-              Khoản nợ gần đây
+              {t('recentDebts')}
             </h2>
-            <div className="space-y-2">
+            <div className="flex flex-col gap-3">
               {recentDebts.map(d => (
                 <Link key={d.debt_id} href={`/books/${d.book_id}`}>
                   <div className="flex items-center gap-3 bg-white dark:bg-[#18181f] rounded-2xl px-4 py-3.5 border border-slate-200 dark:border-white/[0.05] hover:border-slate-300 dark:hover:border-white/[0.12] transition-colors shadow-sm dark:shadow-none">

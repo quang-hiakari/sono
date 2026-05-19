@@ -1,42 +1,41 @@
 import { Resend } from 'resend';
-import { formatVND } from '@/lib/format/currency';
-
-function escapeHtml(str: string): string {
-  return str
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#039;');
-}
+import { formatAmount } from '@/lib/format/currency';
+import { buildEmailHtml, escapeHtml } from './email-html-template';
 
 interface RejectionParams {
   to: string;
   creditorName: string;
   amount: number;
+  currency?: string;
   reason: string | null;
   dashboardUrl: string;
 }
 
 export async function sendRejectionNotification(p: RejectionParams) {
   const resend = new Resend(process.env.RESEND_API_KEY);
-  const vnd = formatVND(p.amount);
+  const fmt = formatAmount(p.amount, p.currency ?? 'VND');
+
+  const content = `
+    <p style="color:#555;font-size:15px;margin:0 0 16px">
+      Thanh toán của bạn đã bị <strong>${escapeHtml(p.creditorName)}</strong> từ chối.
+    </p>
+    <div style="background:#fef2f2;border-radius:8px;padding:16px;margin:0 0 8px">
+      <p style="margin:0;font-size:13px;color:#dc2626;font-weight:600;text-transform:uppercase;letter-spacing:0.5px">Bị từ chối</p>
+      <p style="margin:6px 0 0;font-size:22px;font-weight:700;color:#111">${fmt}</p>
+      ${p.reason ? `<p style="margin:8px 0 0;font-size:13px;color:#64748b">Lý do: <em>${escapeHtml(p.reason)}</em></p>` : ''}
+    </div>
+    <p style="color:#94a3b8;font-size:13px;margin:12px 0 0">
+      Bạn có thể nộp lại thanh toán sau khi kiểm tra lại biên lai.
+    </p>`;
+
   await resend.emails.send({
     from: process.env.RESEND_FROM_EMAIL!,
     to: p.to,
-    subject: `SoNo — Thanh toán ${vnd} bị từ chối`,
-    html: `
-      <div style="font-family: sans-serif; max-width: 480px; margin: 0 auto; padding: 24px;">
-        <h2 style="color: #dc2626; margin-bottom: 16px;">Thanh toán bị từ chối</h2>
-        <p>Thanh toán <strong>${vnd}</strong> của bạn đã bị <strong>${escapeHtml(p.creditorName)}</strong> từ chối.</p>
-        ${p.reason ? `<p>Lý do: <em>${escapeHtml(p.reason)}</em></p>` : ''}
-        <p>Bạn có thể nộp lại thanh toán sau khi kiểm tra lại biên lai.</p>
-        <p style="margin-top: 24px;">
-          <a href="${p.dashboardUrl}" style="background: #1e40af; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none;">
-            Xem lịch sử thanh toán
-          </a>
-        </p>
-      </div>
-    `,
+    subject: `SoNo — Thanh toán ${fmt} bị từ chối`,
+    html: buildEmailHtml({
+      content,
+      ctaLabel: 'Xem lịch sử thanh toán',
+      ctaUrl: p.dashboardUrl,
+    }),
   });
 }

@@ -4,6 +4,7 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { BookOpen, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 import type { DebtBook } from '@/lib/queries/books';
 
 function getPartnerName(book: DebtBook, myId: string) {
@@ -21,15 +22,30 @@ function avatarColor(name: string) {
 
 function BookCard({ book, myId }: { book: DebtBook; myId: string }) {
   const partner = getPartnerName(book, myId);
+  const isDeleted = !!book.deleted_at;
+
   return (
     <Link href={`/books/${book.id}`}>
-      <div className="flex items-center gap-3 bg-white dark:bg-[#18181f] rounded-2xl px-4 py-3.5 border border-slate-200 dark:border-white/[0.05] hover:border-slate-300 dark:hover:border-white/[0.12] active:scale-[0.99] transition-all cursor-pointer shadow-sm dark:shadow-none">
+      <div className={`flex items-center gap-3 bg-white dark:bg-[#18181f] rounded-2xl px-4 py-3.5 border transition-all cursor-pointer shadow-sm dark:shadow-none ${
+        isDeleted
+          ? 'border-slate-100 dark:border-white/[0.03] opacity-50'
+          : 'border-slate-200 dark:border-white/[0.05] hover:border-slate-300 dark:hover:border-white/[0.12] active:scale-[0.99]'
+      }`}>
         <div className="w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm text-white shrink-0"
-          style={{ backgroundColor: avatarColor(partner) }}>
+          style={{ backgroundColor: isDeleted ? '#94a3b8' : avatarColor(partner) }}>
           {(partner[0] || '?').toUpperCase()}
         </div>
         <div className="flex-1 min-w-0">
-          <p className="font-semibold text-slate-900 dark:text-white text-sm truncate">{book.name}</p>
+          <div className="flex items-center gap-2">
+            <p className={`font-semibold text-sm truncate ${isDeleted ? 'line-through text-slate-400 dark:text-white/30' : 'text-slate-900 dark:text-white'}`}>
+              {book.name}
+            </p>
+            {isDeleted && (
+              <span className="shrink-0 text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-red-100 text-red-500 dark:bg-red-900/30 dark:text-red-400">
+                Đã xoá
+              </span>
+            )}
+          </div>
           <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5 truncate">{partner}</p>
         </div>
       </div>
@@ -55,13 +71,14 @@ interface Props {
 }
 
 export function BooksTabs({ creditorBooks, debtorBooks, myId }: Props) {
+  const t = useTranslations('books');
   const [tab, setTab] = useState<'creditor' | 'debtor'>(
     creditorBooks.length >= debtorBooks.length ? 'creditor' : 'debtor'
   );
 
   const tabs = [
-    { id: 'creditor' as const, label: 'Cho nợ', count: creditorBooks.length },
-    { id: 'debtor' as const, label: 'Đang nợ', count: debtorBooks.length },
+    { id: 'creditor' as const, label: t('creditor'), count: creditorBooks.filter(b => !b.deleted_at).length },
+    { id: 'debtor' as const, label: t('debtor'), count: debtorBooks.filter(b => !b.deleted_at).length },
   ];
 
   const books = tab === 'creditor' ? creditorBooks : debtorBooks;
@@ -95,7 +112,7 @@ export function BooksTabs({ creditorBooks, debtorBooks, myId }: Props) {
       {tab === 'creditor' && (
         <Link href="/books/new"
           className="flex items-center justify-center gap-1.5 w-full bg-[#00c9a7] hover:bg-[#00b498] text-[#0d0d0f] font-bold text-sm py-3 rounded-xl transition-colors mb-3">
-          <Plus size={15} /> Tạo sổ nợ mới
+          <Plus size={15} /> {t('newFull')}
         </Link>
       )}
 
@@ -103,7 +120,7 @@ export function BooksTabs({ creditorBooks, debtorBooks, myId }: Props) {
       {books.length === 0 ? (
         <EmptyTab />
       ) : (
-        <div className="space-y-5">
+        <div className="flex flex-col gap-3">
           {books.map(b => <BookCard key={b.id} book={b} myId={myId} />)}
         </div>
       )}

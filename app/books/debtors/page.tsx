@@ -4,6 +4,8 @@ import { Users } from 'lucide-react';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { getMyBooks, getPartnerName, DebtBook } from '@/lib/queries/books';
 import { ThemeToggle } from '@/components/shell/theme-toggle';
+import { getT } from '@/lib/i18n';
+import { LanguageToggle } from '@/components/shell/language-toggle';
 
 const AVATAR_COLORS = ['#3b82f6', '#f43f5e', '#f59e0b', '#8b5cf6', '#10b981', '#ec4899', '#06b6d4'];
 
@@ -43,6 +45,8 @@ export default async function DebtorsPage() {
   const me = await getCurrentUser();
   const books = await getMyBooks(me!.id);
   const partners = buildPartners(books, me!.id);
+  const t = await getT('people');
+  const tb = await getT('books');
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#0d0d0f] text-slate-900 dark:text-white">
@@ -53,9 +57,9 @@ export default async function DebtorsPage() {
             <span className="text-[#00c9a7] font-black text-xl tracking-tight">NỢ</span>
           </div>
           <div className="flex items-center gap-2">
-            <ThemeToggle />
+            <div className="flex items-center gap-1"><LanguageToggle /><ThemeToggle /></div>
             {partners.length > 0 && (
-              <span className="text-xs text-slate-400 dark:text-white/35 font-medium">{partners.length} người</span>
+              <span className="text-xs text-slate-400 dark:text-white/35 font-medium">{t('count', { count: String(partners.length) })}</span>
             )}
           </div>
         </div>
@@ -68,20 +72,20 @@ export default async function DebtorsPage() {
               <Users size={28} className="text-slate-300 dark:text-white/25" />
             </div>
             <div className="text-center space-y-1">
-              <p className="font-semibold text-slate-500 dark:text-white/60 text-sm">Chưa có người liên quan</p>
-              <p className="text-xs text-slate-400 dark:text-white/30">Tạo sổ nợ để thêm người</p>
+              <p className="font-semibold text-slate-500 dark:text-white/60 text-sm">{t('empty')}</p>
+              <p className="text-xs text-slate-400 dark:text-white/30">{t('emptyHint')}</p>
             </div>
             <Link
               href="/books/new"
               className="mt-2 flex items-center gap-2 bg-[#00c9a7] hover:bg-[#00b498] text-[#0d0d0f] font-bold text-sm px-6 py-3 rounded-full transition-colors"
             >
-              Tạo sổ nợ
+              {tb('create')}
             </Link>
           </div>
         ) : (
           <div className="space-y-2.5">
             <h2 className="text-[11px] font-semibold text-slate-400 dark:text-white/30 uppercase tracking-widest px-1 mb-4">
-              Người liên quan
+              {t('title')}
             </h2>
             {partners.map(partner => {
               const initial = (partner.name?.[0] || partner.email?.[0] || '?').toUpperCase();
@@ -103,18 +107,18 @@ export default async function DebtorsPage() {
                     </p>
                     <p className="text-xs text-slate-500 dark:text-white/40 mt-0.5 truncate">{partner.email}</p>
                     <p className="text-xs text-slate-400 dark:text-white/25 mt-0.5">
-                      {partner.books.length} sổ nợ
+                      {t('books', { count: String(partner.books.length) })}
                     </p>
                   </div>
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     {partner.theyOweMe && (
                       <span className="text-[11px] bg-[#00c9a7]/15 text-[#00a88a] dark:text-[#00c9a7] px-2 py-0.5 rounded-full font-medium">
-                        Nợ tôi
+                        {t('owesMe')}
                       </span>
                     )}
                     {partner.iOweThem && (
                       <span className="text-[11px] bg-orange-500/15 text-orange-600 dark:text-orange-400 px-2 py-0.5 rounded-full font-medium">
-                        Tôi nợ
+                        {t('iOwe')}
                       </span>
                     )}
                   </div>

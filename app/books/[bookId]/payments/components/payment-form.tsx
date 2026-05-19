@@ -7,11 +7,14 @@ import { ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { useTranslations } from 'next-intl';
 import { CurrencyAmountInput } from '@/components/ui/currency-amount-input';
 import { compressImage } from '@/lib/upload/compress-image';
 import { uploadReceipt } from '@/lib/upload/upload-receipt';
 
 export function PaymentForm({ bookId, currency }: { bookId: string; currency: string }) {
+  const t = useTranslations("payment");
+  const tc = useTranslations("common");
   const router = useRouter();
   const [submitting, setSubmitting] = useState(false);
   const [preview, setPreview] = useState<string | null>(null);
@@ -22,7 +25,7 @@ export function PaymentForm({ bookId, currency }: { bookId: string; currency: st
     const selected = e.target.files?.[0];
     if (!selected) return;
     if (selected.size > 5 * 1024 * 1024) {
-      toast.error('Ảnh quá lớn (tối đa 5MB).');
+      toast.error(t('receiptTooBig'));
       return;
     }
     setFile(selected);
@@ -32,7 +35,7 @@ export function PaymentForm({ bookId, currency }: { bookId: string; currency: st
   async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget; // capture before any await
-    if (!file) { toast.error('Vui lòng chọn ảnh biên lai.'); return; }
+    if (!file) { toast.error(t('receiptRequired')); return; }
     setSubmitting(true);
     try {
       const compressed = await compressImage(file);
@@ -51,11 +54,11 @@ export function PaymentForm({ bookId, currency }: { bookId: string; currency: st
       if (!res.ok || result.error) {
         throw new Error(result.error || `Lỗi ${res.status}`);
       } else {
-        toast.success('Đã gửi thanh toán! Chờ duyệt.');
+        toast.success(t('sentSuccess'));
         router.push(`/books/${bookId}`);
       }
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : 'Có lỗi xảy ra. Vui lòng thử lại.');
+      toast.error(err instanceof Error ? err.message : tc('error'));
     } finally {
       setSubmitting(false);
     }
@@ -64,7 +67,7 @@ export function PaymentForm({ bookId, currency }: { bookId: string; currency: st
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-1.5">
-        <Label htmlFor="amount">Số tiền ({currency}) *</Label>
+        <Label htmlFor="amount">{t("amount")} ({currency}) *</Label>
         <CurrencyAmountInput
           currency={currency}
           name="amount"
@@ -75,7 +78,7 @@ export function PaymentForm({ bookId, currency }: { bookId: string; currency: st
       </div>
 
       <div className="space-y-1.5">
-        <Label>Ảnh biên lai *</Label>
+        <Label>{t("receipt")} *</Label>
         <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handleFileChange} disabled={submitting} className="hidden" />
         <button
           type="button"
@@ -87,18 +90,18 @@ export function PaymentForm({ bookId, currency }: { bookId: string; currency: st
             // eslint-disable-next-line @next/next/no-img-element
             <img src={preview} alt="Preview" className="w-full object-contain rounded-lg" />
           ) : (
-            <><ImageIcon size={28} /><span className="text-sm">Chụp hoặc chọn ảnh</span></>
+            <><ImageIcon size={28} /><span className="text-sm">{t("receiptHint")}</span></>
           )}
         </button>
       </div>
 
       <div className="space-y-1.5">
-        <Label htmlFor="note">Ghi chú</Label>
-        <Textarea id="note" name="note" maxLength={500} placeholder="Ghi chú thêm (không bắt buộc)" rows={2} disabled={submitting} />
+        <Label htmlFor="note">{t("note")}</Label>
+        <Textarea id="note" name="note" maxLength={500} placeholder={t("notePlaceholder")} rows={2} disabled={submitting} />
       </div>
 
       <Button type="submit" className="w-full" disabled={submitting}>
-        {submitting ? 'Đang gửi...' : 'Gửi thanh toán'}
+        {submitting ? t('sending') : t('send')}
       </Button>
     </form>
   );
