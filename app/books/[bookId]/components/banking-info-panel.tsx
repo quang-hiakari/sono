@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 
 interface BankingProfile {
   bank_name: string | null;
+  branch_name: string | null;
   account_number: string | null;
   account_holder: string | null;
   creditor_id: string | null;
@@ -74,6 +75,12 @@ function TabContent({ profile, showTabs, defaultTab }: {
             <div>
               <p className="text-xs text-slate-400 mb-0.5">Ngân hàng</p>
               <p className="font-medium text-slate-800 dark:text-white">{profile.bank_name}</p>
+            </div>
+          )}
+          {profile.branch_name && (
+            <div>
+              <p className="text-xs text-slate-400 mb-0.5">Chi nhánh</p>
+              <p className="font-medium text-slate-800 dark:text-white">{profile.branch_name}</p>
             </div>
           )}
           {profile.account_number && (

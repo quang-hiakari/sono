@@ -32,6 +32,7 @@ export default async function BookPage({ params }: Props) {
 
   const bankingProfile = creditorProfile ? {
     bank_name: creditorProfile.bank_name,
+    branch_name: creditorProfile.branch_name,
     account_number: creditorProfile.account_number,
     account_holder: creditorProfile.account_holder,
     creditor_id: book.creditor_id,

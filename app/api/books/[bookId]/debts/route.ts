@@ -5,6 +5,7 @@ import { getDB } from '@/lib/db';
 import { getCurrentUser } from '@/lib/auth/get-current-user';
 import { revalidatePath } from 'next/cache';
 import { sendDebtDeletedNotification } from '@/lib/email/send-debt-deleted-notification';
+import { sendDebtNotification } from '@/lib/email/send-debt-notification';
 
 const schema = z.object({
   title: z.string().min(1).max(120),
@@ -20,8 +21,8 @@ export async function POST(req: Request, { params }: { params: Promise<{ bookId:
 
   const { bookId } = await params;
   const db = getDB();
-  const book = await db.prepare('SELECT creditor_id FROM debt_books WHERE id = ?')
-    .bind(bookId).first<{ creditor_id: string }>();
+  const book = await db.prepare('SELECT creditor_id, debtor_id, name, currency FROM debt_books WHERE id = ?')
+    .bind(bookId).first<{ creditor_id: string; debtor_id: string; name: string; currency: string }>();
   if (!book || book.creditor_id !== me.id)
     return Response.json({ error: 'Không có quyền.' }, { status: 403 });
 
@@ -35,6 +36,27 @@ export async function POST(req: Request, { params }: { params: Promise<{ bookId:
   await db.prepare(
     'INSERT INTO debts (id, book_id, creditor_id, title, amount, notes, debt_date, invoice_url) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
   ).bind(crypto.randomUUID(), bookId, me.id, title, amount, notes ?? null, date, invoice_url ?? null).run();
+
+  // Notify debtor (best-effort)
+  try {
+    const debtor = await db.prepare('SELECT email FROM "user" WHERE id = ?')
+      .bind(book.debtor_id).first<{ email: string }>();
+    if (debtor?.email) {
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
+      await sendDebtNotification({
+        to: debtor.email,
+        creditorName: me.name || me.email,
+        bookName: book.name,
+        title,
+        amount,
+        currency: book.currency,
+        debtDate: date,
+        dashboardUrl: `${appUrl}/books/${bookId}`,
+      });
+    }
+  } catch (err) {
+    console.error('[createDebt] notification failed:', err);
+  }
 
   revalidatePath(`/books/${bookId}`);
   revalidatePath(`/books/${bookId}/debts`);
