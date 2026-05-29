@@ -15,6 +15,7 @@
     "@aws-sdk/client-s3": "^3.1047.0",
     "@aws-sdk/s3-request-presigner": "^3.1047.0",
     "@hookform/resolvers": "^3",
+    "@marsidev/react-turnstile": "^1.5.2",
     "@radix-ui/react-dialog": "^1",
     "@radix-ui/react-label": "^2",
     "@radix-ui/react-select": "^2",
@@ -38,7 +39,10 @@
     "zod": "^3"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["@parcel/watcher", "@swc/core"]
+    "onlyBuiltDependencies": [
+      "@parcel/watcher",
+      "@swc/core"
+    ]
   },
   "devDependencies": {
     "@cloudflare/next-on-pages": "^1",

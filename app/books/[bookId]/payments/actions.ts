@@ -83,6 +83,13 @@ export async function approvePayment(bookId: string, paymentId: string) {
       const debtor = await db.prepare('SELECT email FROM "user" WHERE id = ?')
         .bind(book.debtor_id).first<{ email: string }>();
       if (debtor?.email) {
+        const [totalDebts, totalPaid] = await Promise.all([
+          db.prepare('SELECT COALESCE(SUM(amount), 0) as total FROM debts WHERE book_id = ? AND deleted_at IS NULL')
+            .bind(bookId).first<{ total: number }>(),
+          db.prepare('SELECT COALESCE(SUM(amount), 0) as total FROM payments WHERE book_id = ? AND status = ?')
+            .bind(bookId, 'approved').first<{ total: number }>(),
+        ]);
+        const remainingDebt = (totalDebts?.total ?? 0) - (totalPaid?.total ?? 0);
         const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? '';
         await sendApprovalNotification({
           to: debtor.email,
@@ -90,6 +97,7 @@ export async function approvePayment(bookId: string, paymentId: string) {
           bookName: book.name,
           amount: Number(payment.amount),
           currency: book.currency,
+          remainingDebt,
           dashboardUrl: `${appUrl}/books/${bookId}/payments`,
         });
       }

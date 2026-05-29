@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Image from 'next/image';
 import { toast } from 'sonner';
+import { Turnstile } from '@marsidev/react-turnstile';
+import type { TurnstileInstance } from '@marsidev/react-turnstile';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -16,14 +18,22 @@ export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<TurnstileInstance>(null);
 
   async function handleSendOtp(e: React.FormEvent) {
     e.preventDefault();
+    if (!turnstileToken) {
+      toast.error('Vui lòng hoàn tất xác minh.');
+      return;
+    }
     setLoading(true);
-    const result = await sendOtp(email);
+    const result = await sendOtp(email, turnstileToken);
     setLoading(false);
     if (result?.error) {
       toast.error(result.error);
+      turnstileRef.current?.reset();
+      setTurnstileToken(null);
     } else {
       setStep('code');
       toast.success('Mã xác nhận đã được gửi!');
@@ -42,8 +52,13 @@ export default function LoginPage() {
   }
 
   async function handleResend() {
+    if (!turnstileToken) {
+      setStep('email');
+      toast.error('Vui lòng xác minh lại.');
+      return;
+    }
     setLoading(true);
-    const result = await sendOtp(email);
+    const result = await sendOtp(email, turnstileToken);
     setLoading(false);
     if (result?.error) toast.error(result.error);
     else toast.success('Đã gửi lại mã mới!');
@@ -81,7 +96,19 @@ export default function LoginPage() {
                     disabled={loading}
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Turnstile
+                  ref={turnstileRef}
+                  siteKey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY!}
+                  onSuccess={setTurnstileToken}
+                  onExpire={() => setTurnstileToken(null)}
+                  onError={() => setTurnstileToken(null)}
+                  options={{ theme: 'light' }}
+                />
+                <Button
+                  type="submit"
+                  className="w-full"
+                  disabled={loading || !turnstileToken}
+                >
                   {loading ? 'Đang gửi...' : 'Gửi mã xác nhận'}
                 </Button>
               </form>

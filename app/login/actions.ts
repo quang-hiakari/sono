@@ -4,8 +4,12 @@ import { redirect } from 'next/navigation';
 import { headers } from 'next/headers';
 import { createAuth } from '@/lib/auth';
 import { getDB } from '@/lib/db';
+import { verifyTurnstile } from '@/lib/turnstile';
 
-export async function sendOtp(email: string) {
+export async function sendOtp(email: string, turnstileToken: string) {
+  const valid = await verifyTurnstile(turnstileToken);
+  if (!valid) return { error: 'Xác minh bot thất bại. Vui lòng thử lại.' };
+
   const auth = createAuth(getDB());
   try {
     await auth.api.sendVerificationOTP({
